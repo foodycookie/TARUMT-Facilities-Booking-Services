@@ -12,7 +12,7 @@ import utility.MessageUI;
  */
 public class ProductMaintenance {
 
-  private ListInterface<Product> productList = new ArrayList<>();
+  private SortedListInterface<Product> productList = new ArrayList<>();
   private ProductDAO productDAO = new ProductDAO();
   private ProductMaintenanceUI productUI = new ProductMaintenanceUI();
 

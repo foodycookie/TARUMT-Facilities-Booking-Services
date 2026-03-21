@@ -11,7 +11,7 @@ import java.io.*;
 public class ProductDAO {
   private String fileName = "products.dat"; // For security and maintainability, should not have filename hardcoded here.
   
-  public void saveToFile(ListInterface<Product> productList) {
+  public void saveToFile(SortedListInterface<Product> productList) {
     File file = new File(fileName);
     try {
       ObjectOutputStream ooStream = new ObjectOutputStream(new FileOutputStream(file));
@@ -24,9 +24,9 @@ public class ProductDAO {
     }
   }
 
-  public ListInterface<Product> retrieveFromFile() {
+  public SortedListInterface<Product> retrieveFromFile() {
     File file = new File(fileName);
-    ListInterface<Product> productList = new ArrayList<>();
+    SortedListInterface<Product> productList = new ArrayList<>();
     try {
       ObjectInputStream oiStream = new ObjectInputStream(new FileInputStream(file));
       productList = (ArrayList<Product>) (oiStream.readObject());

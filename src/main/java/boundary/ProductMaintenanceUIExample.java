@@ -1,13 +1,13 @@
 package boundary;
 
-import entity.Product;
+import entity.ProductExample;
 import java.util.Scanner;
 
 /**
  *
  * @author Kat Tan
  */
-public class ProductMaintenanceUI {
+public class ProductMaintenanceUIExample {
 
   Scanner scanner = new Scanner(System.in);
 
@@ -27,7 +27,7 @@ public class ProductMaintenanceUI {
     System.out.println("\nList of Products:\n" + outputStr);
   }
 
-  public void printProductDetails(Product product) {
+  public void printProductDetails(ProductExample product) {
     System.out.println("Product Details");
     System.out.println("Product code:" + product.getNumber());
     System.out.println("Product name: " + product.getName());
@@ -53,11 +53,11 @@ public class ProductMaintenanceUI {
     return quantity;
   }
 
-  public Product inputProductDetails() {
+  public ProductExample inputProductDetails() {
     String productCode = inputProductCode();
     String productName = inputProductName();
     int quantity = inputQuantity();
     System.out.println();
-    return new Product(productCode, productName, quantity);
+    return new ProductExample(productCode, productName, quantity);
   }
 }

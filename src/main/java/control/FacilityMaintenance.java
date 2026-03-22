@@ -1,22 +1,22 @@
 package control;
 
 import adt.*;
-import boundary.ProductMaintenanceUI;
-import dao.ProductDAO;
+import boundary.ProductMaintenanceUIExample;
+import dao.ProductDAOExample;
 import entity.*;
-import utility.MessageUI;
+import utility.MessageUIExample;
 
 /**
  *
  * @author Kat Tan
  */
-public class ProductMaintenance {
+public class ProductMaintenanceExample {
 
-  private SortedListInterface<Product> productList = new ArrayList<>();
-  private ProductDAO productDAO = new ProductDAO();
-  private ProductMaintenanceUI productUI = new ProductMaintenanceUI();
+  private SortedListInterface<ProductExample> productList = new ArrayList<>();
+  private ProductDAOExample productDAO = new ProductDAOExample();
+  private ProductMaintenanceUIExample productUI = new ProductMaintenanceUIExample();
 
-  public ProductMaintenance() {
+  public ProductMaintenanceExample() {
     productList = productDAO.retrieveFromFile();
   }
   
@@ -26,7 +26,7 @@ public class ProductMaintenance {
       choice = productUI.getMenuChoice();
       switch(choice) {
         case 0:
-          MessageUI.displayExitMessage();
+          MessageUIExample.displayExitMessage();
           break;
         case 1:
           addNewProduct();
@@ -36,13 +36,13 @@ public class ProductMaintenance {
           productUI.listAllProducts(getAllProducts());
           break;
         default:
-          MessageUI.displayInvalidChoiceMessage();
+          MessageUIExample.displayInvalidChoiceMessage();
       } 
     } while (choice != 0);
   }
 
   public void addNewProduct() {
-    Product newProduct = productUI.inputProductDetails();
+    ProductExample newProduct = productUI.inputProductDetails();
     productList.add(newProduct);
     productDAO.saveToFile(productList);
   }
@@ -60,7 +60,7 @@ public class ProductMaintenance {
   }
   
   public static void main(String[] args) {
-    ProductMaintenance productMaintenance = new ProductMaintenance();
+    ProductMaintenanceExample productMaintenance = new ProductMaintenanceExample();
     productMaintenance.runProductMaintenance();
   }
 }

@@ -4,7 +4,7 @@ package utility;
  *
  * @author Kat Tan
  */
-public class MessageUI {
+public class MessageUIExample {
   
   
   public static void displayInvalidChoiceMessage() {

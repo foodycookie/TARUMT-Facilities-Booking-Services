@@ -4,16 +4,16 @@ import java.util.Iterator;
 
 /**
  * This is a doubly linked implementation
- * @author 
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
  */
 
 public class SortedLinkedList<T extends Comparable<T>> implements SortedListInterface<T> {
     private Node firstNode;
-    private int numberofEntries;
+    private int numberOfEntries;
     
     public SortedLinkedList() {
         firstNode = null;
-        numberofEntries = 0;
+        numberOfEntries = 0;
     }
 
     @Override
@@ -45,12 +45,12 @@ public class SortedLinkedList<T extends Comparable<T>> implements SortedListInte
             newNode.next = currentNode.next;
             currentNode.next = newNode;
 
-            if (currentNode.next != null) {
-                currentNode.next.previous = newNode;
+            if (newNode.next != null) {
+                newNode.next.previous = newNode;
             }
         }
         
-        numberofEntries++;
+        numberOfEntries++;
         
         return true;
     }
@@ -85,7 +85,7 @@ public class SortedLinkedList<T extends Comparable<T>> implements SortedListInte
                     }
                 }
                 
-                numberofEntries--;
+                numberOfEntries--;
                 
                 return true;
             }
@@ -100,7 +100,7 @@ public class SortedLinkedList<T extends Comparable<T>> implements SortedListInte
     @Override
     public void clear() {
         firstNode = null;
-        numberofEntries = 0;
+        numberOfEntries = 0;
     }
 
     @Override
@@ -121,12 +121,12 @@ public class SortedLinkedList<T extends Comparable<T>> implements SortedListInte
 
     @Override
     public int getNumberOfEntries() {
-        return numberofEntries;
+        return numberOfEntries;
     }
 
     @Override
     public boolean isEmpty() {
-        return (numberofEntries == 0);
+        return (numberOfEntries == 0);
     }
     
     @Override

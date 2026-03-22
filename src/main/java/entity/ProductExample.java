@@ -7,15 +7,15 @@ import java.util.Objects;
  *
  * @author Kat Tan
  */
-public class Product implements Serializable {
+public class ProductExample implements Serializable {
   private String number;
   private String name;
   private int quantity;
 
-  public Product() {
+  public ProductExample() {
   }
 
-  public Product(String number, String name, int quantity) {
+  public ProductExample(String number, String name, int quantity) {
     this.number = number;
     this.name = name;
     this.quantity = quantity;
@@ -62,7 +62,7 @@ public class Product implements Serializable {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final Product other = (Product) obj;
+    final ProductExample other = (ProductExample) obj;
     if (!Objects.equals(this.number, other.number)) {
       return false;
     }

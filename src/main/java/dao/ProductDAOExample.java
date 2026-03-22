@@ -1,17 +1,17 @@
 package dao;
 
 import adt.*;
-import entity.Product;
+import entity.ProductExample;
 import java.io.*;
 
 /**
  *
  * @author Kat Tan
  */
-public class ProductDAO {
+public class ProductDAOExample {
   private String fileName = "products.dat"; // For security and maintainability, should not have filename hardcoded here.
   
-  public void saveToFile(SortedListInterface<Product> productList) {
+  public void saveToFile(SortedListInterface<ProductExample> productList) {
     File file = new File(fileName);
     try {
       ObjectOutputStream ooStream = new ObjectOutputStream(new FileOutputStream(file));
@@ -24,12 +24,12 @@ public class ProductDAO {
     }
   }
 
-  public SortedListInterface<Product> retrieveFromFile() {
+  public SortedListInterface<ProductExample> retrieveFromFile() {
     File file = new File(fileName);
-    SortedListInterface<Product> productList = new ArrayList<>();
+    SortedListInterface<ProductExample> productList = new ArrayList<>();
     try {
       ObjectInputStream oiStream = new ObjectInputStream(new FileInputStream(file));
-      productList = (ArrayList<Product>) (oiStream.readObject());
+      productList = (ArrayList<ProductExample>) (oiStream.readObject());
       oiStream.close();
     } catch (FileNotFoundException ex) {
       System.out.println("\nNo such file.");

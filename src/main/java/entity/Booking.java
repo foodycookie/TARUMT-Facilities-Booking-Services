@@ -66,8 +66,7 @@ public class Booking implements Serializable, Comparable<Booking>{
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        return hash;
+        return Integer.hashCode(bookingID);
     }
 
     @Override

@@ -8,7 +8,7 @@ public class User implements Serializable, Comparable<User>{
     
     public User() {}
     
-    public User (int userID, String username) {
+    public User (int userID, String userName) {
         this.userID = userID;
         this.userName = userName;
     }
@@ -36,8 +36,7 @@ public class User implements Serializable, Comparable<User>{
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        return hash;
+        return Integer.hashCode(userID);
     }
 
     @Override

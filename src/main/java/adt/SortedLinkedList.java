@@ -5,6 +5,7 @@ import java.util.Iterator;
 /**
  * This is a doubly linked implementation
  * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
+ * @param <T>
  */
 
 public class SortedLinkedList<T extends Comparable<T>> implements SortedListInterface<T> {

@@ -8,10 +8,19 @@ import java.util.Iterator;
  * @author
  */
 
-public class SortedArrayList<T extends Comparable<T>> implements TestInterface<T> {
+public class SortedArrayList<T extends Comparable<T>> implements SortedListInterface<T> {
     private T[] array;
     private int numberOfEntries;
     private static final int DEFAULT_CAPACITY = 20;
+    
+    public SortedArrayList() {
+        this(DEFAULT_CAPACITY);
+    }
+    
+    public SortedArrayList(int initialCapacity) {
+        numberOfEntries = 0;
+        array = (T[]) new Comparable[initialCapacity];
+    }
     
     @Override
     public boolean add(T newEntry) {

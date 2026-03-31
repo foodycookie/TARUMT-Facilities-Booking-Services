@@ -3,7 +3,7 @@ package entity;
 import java.io.Serializable;
 
 /**
- * @author Ong Hao Howard
+ * @author
  */
 
 public class Facility implements Serializable, Comparable<Facility> {

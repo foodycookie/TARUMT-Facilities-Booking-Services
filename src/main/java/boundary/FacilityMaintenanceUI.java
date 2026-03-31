@@ -27,10 +27,15 @@ public class FacilityMaintenanceUI {
         return choice; 
     }
     
+    // auto generated priimary id
+    // ask facility name, predefined option
+    // ask room type, predefined option and a other option, user can enter
+    // ask room name
     public void addFacility() {
         
     }
     
+    // display all based on facility name
     public void viewAllFacilities() {
         
     }

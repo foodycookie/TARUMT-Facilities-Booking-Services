@@ -8,7 +8,7 @@ import utility.MessageUIExample;
 
 /**
  *
- * @author Kat Tan
+ * @author Ong Hao Howard
  */
 public class ProductMaintenanceExample {
 

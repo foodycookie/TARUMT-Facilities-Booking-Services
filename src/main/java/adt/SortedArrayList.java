@@ -1,14 +1,15 @@
 package adt;
 
 import java.util.Iterator;
+import java.io.Serializable;
 
 /**
- * We assumed the entries in the list have positions that begin with 1.
- * But in the array logic, it begins with 0.
+ * We assumed the entries in the list have positions that begin with 1.But in the array logic, it begins with 0.
  * @author
+ * @param <T>
  */
 
-public class SortedArrayList<T extends Comparable<T>> implements SortedListInterface<T> {
+public class SortedArrayList<T extends Comparable<T>> implements SortedListInterface<T>, Serializable {
     private T[] array;
     private int numberOfEntries;
     private static final int DEFAULT_CAPACITY = 20;
@@ -163,7 +164,7 @@ public class SortedArrayList<T extends Comparable<T>> implements SortedListInter
     
     private void makeRoom(int newPosition) {
         int lastIndex = numberOfEntries - 1;
-        int indexToStop = newPosition - 1;
+        int indexToStop = newPosition;
         
         for (int i = lastIndex; i >= indexToStop; i--) {
             array[i + 1] = array[i];
@@ -171,7 +172,7 @@ public class SortedArrayList<T extends Comparable<T>> implements SortedListInter
     }
     
     private void removeGap(int givenPosition) {
-        int startIndex = givenPosition - 1;
+        int startIndex = givenPosition;
         int lastIndex = numberOfEntries - 1;
         
         for (int i = startIndex; i < lastIndex; i++) {

@@ -1,9 +1,8 @@
 package control;
 
-import adt.*;
+import adt.SortedArrayList;
 import dao.UserDAO;
 import entity.User;
-
 
 /**
  *
@@ -27,12 +26,21 @@ public class UserMaintenance {
         return userList.getNumberOfEntries();
     }
 
-    public boolean isValidStudentId(String studentId) {
-        return studentId != null && studentId.matches("\\d{2}[A-Z]{3}\\d{5}");
+    public boolean isValidStudentId(String id) {
+        return id != null && id.matches("\\d{2}[A-Z]{3}\\d{5}");
     }
 
-    public boolean isValidStudentName(String studentName) {
-        return studentName != null && !studentName.trim().isEmpty();
+    public boolean isValidStaffId(String id) {
+        return id != null && id.matches("P\\d{4}");
+    }
+
+    public boolean isValidUserName(String name) {
+        return name != null && !name.trim().isEmpty();
+    }
+
+    public boolean isValidRole(String role) {
+        return role != null &&
+               (role.equalsIgnoreCase("Student") || role.equalsIgnoreCase("Staff"));
     }
 
     public String generateUserId() {
@@ -58,11 +66,11 @@ public class UserMaintenance {
 
         return "U" + String.format("%06d", max + 1);
     }
-
-    public boolean studentIdExists(String studentId) {
-        for (int i = 1; i <= userList.getNumberOfEntries(); i++){
+    
+    public boolean roleIdExists(String roleId) {
+        for (int i = 1; i <= userList.getNumberOfEntries(); i++) {
             User user = userList.getEntry(i);
-            if (user != null && user.getStudentId().equalsIgnoreCase(studentId)){
+            if (user != null && user.getRoleId().equalsIgnoreCase(roleId)) {
                 return true;
             }
         }
@@ -70,19 +78,19 @@ public class UserMaintenance {
     }
 
     public User findUserByUserId(String userId) {
-        for (int i = 1; i <= userList.getNumberOfEntries(); i++){
+        for (int i = 1; i <= userList.getNumberOfEntries(); i++) {
             User user = userList.getEntry(i);
-            if (user != null && user.getUserId().equalsIgnoreCase(userId)){
+            if (user != null && user.getUserId().equalsIgnoreCase(userId)) {
                 return user;
             }
         }
         return null;
     }
 
-    public User findUserByStudentId(String studentId) {
-        for (int i = 1; i <= userList.getNumberOfEntries(); i++){
+    public User findUserByRoleId(String roleId) {
+        for (int i = 1; i <= userList.getNumberOfEntries(); i++) {
             User user = userList.getEntry(i);
-            if (user != null && user.getStudentId().equalsIgnoreCase(studentId)){
+            if (user != null && user.getRoleId().equalsIgnoreCase(roleId)) {
                 return user;
             }
         }
@@ -94,15 +102,21 @@ public class UserMaintenance {
             return false;
         }
 
-        if (!isValidStudentId(user.getStudentId())) {
+        if (!isValidUserName(user.getUserName()) || !isValidRole(user.getRole())) {
             return false;
         }
 
-        if (!isValidStudentName(user.getStudentName())) {
-            return false;
+        if (user.getRole().equalsIgnoreCase("Student")) {
+            if (!isValidStudentId(user.getRoleId())) {
+                return false;
+            }
+        } else if (user.getRole().equalsIgnoreCase("Staff")) {
+            if (!isValidStaffId(user.getRoleId())) {
+                return false;
+            }
         }
 
-        if (studentIdExists(user.getStudentId())) {
+        if (roleIdExists(user.getRoleId())) {
             return false;
         }
 
@@ -115,22 +129,32 @@ public class UserMaintenance {
         return added;
     }
 
-    public boolean updateUser(String userId, String newStudentId, String newStudentName) {
+    public boolean updateUser(String userId, String newRoleId, String newUserName, String newRole) {
         User existingUser = findUserByUserId(userId);
 
         if (existingUser == null) {
             return false;
         }
 
-        if (!isValidStudentId(newStudentId) || !isValidStudentName(newStudentName)) {
+        if (!isValidUserName(newUserName) || !isValidRole(newRole)) {
             return false;
         }
 
-        if (!existingUser.getStudentId().equalsIgnoreCase(newStudentId) && studentIdExists(newStudentId)) {
+        if (newRole.equalsIgnoreCase("Student")) {
+            if (!isValidStudentId(newRoleId)) {
+                return false;
+            }
+        } else if (newRole.equalsIgnoreCase("Staff")) {
+            if (!isValidStaffId(newRoleId)) {
+                return false;
+            }
+        }
+
+        if (!existingUser.getRoleId().equalsIgnoreCase(newRoleId) && roleIdExists(newRoleId)) {
             return false;
         }
 
-        User updatedUser = new User(userId, newStudentId, newStudentName);
+        User updatedUser = new User(userId, newRoleId, newUserName, newRole);
 
         boolean removed = userList.remove(existingUser);
         if (!removed) {
@@ -142,7 +166,6 @@ public class UserMaintenance {
             saveToFile();
             return true;
         } else {
-            // rollback just in case
             userList.add(existingUser);
             return false;
         }
@@ -175,22 +198,26 @@ public class UserMaintenance {
     public String displayAllUsers() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n==============================================================\n");
-        sb.append(String.format("%-10s %-15s %-25s\n", "User ID", "Student ID", "Student Name"));
-        sb.append("==============================================================\n");
+        sb.append("\n====================================================================\n");
+        sb.append(String.format("%-10s %-15s %-25s %-10s\n", "User ID", "Role ID", "Name", "Role"));
+        sb.append("====================================================================\n");
 
         if (userList.isEmpty()) {
-            sb.append(String.format("%-10s %-15s %-25s\n", "-", "-", "No User records found"));
+            sb.append(String.format("%-10s %-15s %-25s %-10s\n", "-", "-", "No records found", "-"));
         } else {
-            for (int i = 1; i <= userList.getNumberOfEntries(); i++){
+            for (int i = 1; i <= userList.getNumberOfEntries(); i++) {
                 User user = userList.getEntry(i);
-                if (user != null){
-                    sb.append(String.format("%-10s %-15s %-25s\n", user.getUserId(), user.getStudentId(), user.getStudentName()));
+                if (user != null) {
+                    sb.append(String.format("%-10s %-15s %-25s %-10s\n",
+                            user.getUserId(),
+                            user.getRoleId(),
+                            user.getUserName(),
+                            user.getRole()));
                 }
             }
         }
 
-        sb.append("==============================================================\n");
+        sb.append("====================================================================\n");
         return sb.toString();
     }
 }

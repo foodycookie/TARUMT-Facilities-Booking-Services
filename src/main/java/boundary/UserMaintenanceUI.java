@@ -12,7 +12,7 @@ public class UserMaintenanceUI {
     private Scanner scanner = new Scanner(System.in);
     private UserMaintenance userMaintenance = new UserMaintenance(); 
     
-    public void start(){
+    public void start() {
         int choice;
 
         do {
@@ -26,12 +26,11 @@ public class UserMaintenanceUI {
             choice = readInt();
 
             switch (choice) {
-                case 1 -> displayUserMenu();
+                case 1 -> System.out.println(userMaintenance.displayAllUsers());
                 case 2 -> addUser();
                 case 3 -> updateUser();
                 case 4 -> deleteUser();
-                case 0 -> System.out.println("Exiting User Management Module...");    
-                        //WILL BE CHANGE like Redirect to Timetable  
+                case 0 -> System.out.println("Exiting User Management Module...");
                 default -> System.out.println("Invalid choice. Please try again.");
             }
         } while (choice != 0);
@@ -48,62 +47,77 @@ public class UserMaintenanceUI {
         return value; 
     }
 
-    private void displayUserMenu() {
-        int choice;
-
-            do {
-                System.out.println(userMaintenance.displayAllUsers());
-                System.out.println("1. Update User");
-                System.out.println("2. Delete User");
-                System.out.println("3. Back");
-                System.out.print("Enter choice: ");
-                choice = readInt();
-
-                switch (choice) {
-                    case 1 -> updateUser();
-                    case 2 -> deleteUser();
-                    case 3 -> System.out.println("Returning to main menu...");
-                    default -> System.out.println("Invalid choice. Please try again.");
-                }
-            } while (choice != 3);    
-    }
 
     private void addUser() {
         int choice;
 
         do {
-            System.out.println("\n============ ADD USER ===========");
+            System.out.println("\n========== ADD USER ==========");
 
-            System.out.print("Enter Student ID (nnwwwnnnnn): ");
-            String studentId = scanner.nextLine().trim();
+            String role = "";
+            String roleId = "";
+            String userName = "";
 
-            if (!userMaintenance.isValidStudentId(studentId)) {
-                System.out.println("Invalid Student ID format. Example: 24ABC12345");
+            int roleChoice;
+            do {
+                System.out.println("1. Student");
+                System.out.println("2. Staff");
+                System.out.print("Choose role: ");
+                roleChoice = readInt();
+
+                if (roleChoice != 1 && roleChoice != 2) {
+                    System.out.println("Invalid choice. Please enter 1 or 2 only.");
+                }
+            } while (roleChoice != 1 && roleChoice != 2);
+            
+            String roleExp;
+            
+            if (roleChoice == 1) {
+                role = "Student";
+                roleExp = "(nnWWWnnnnn)";
+            } else {
+                role = "Staff";
+                roleExp = "(P1234)";
+            }
+
+            System.out.print("Enter " + role + " ID" + roleExp + ": ");
+            roleId = scanner.nextLine().trim();
+            
+            if (role.equals("Student")) {
+                if (!userMaintenance.isValidStudentId(roleId)) {
+                    System.out.println("Invalid Student ID format " + roleExp);
+                    choice = 2;
+                    continue;
+                }
+            } else {
+                if (!userMaintenance.isValidStaffId(roleId)) {
+                    System.out.println("Invalid Staff ID format " + roleExp);
+                    choice = 2;
+                    continue;
+                }
+            }
+
+            if (userMaintenance.roleIdExists(roleId)) {
+                System.out.println("Role ID already exists.");
                 choice = 2;
                 continue;
             }
 
-            if (userMaintenance.studentIdExists(studentId)) {
-                System.out.println("Student ID already exists.");
-                choice = 2;
-                continue;
-            }
+            System.out.print("Enter Name: ");
+            userName = scanner.nextLine().trim();
 
-            System.out.print("Enter Student Name: ");
-            String studentName = scanner.nextLine().trim();
-
-            if (!userMaintenance.isValidStudentName(studentName)) {
-                System.out.println("Student name cannot be empty.");
+            if (!userMaintenance.isValidUserName(userName)) {
+                System.out.println("Name cannot be empty.");
                 choice = 2;
                 continue;
             }
 
             String generatedUserId = userMaintenance.generateUserId();
-            User tempUser = new User(generatedUserId, studentId, studentName);
+            User tempUser = new User(generatedUserId, roleId, userName, role);
 
-            System.out.println("\n----------- USER PROFILE PREVIEW ------------");
+            System.out.println("\n---------- USER PROFILE PREVIEW ----------");
             System.out.println(tempUser);
-            System.out.println("---------------------------------------------");
+            System.out.println("------------------------------------------");
             System.out.println("1. Confirm and Save");
             System.out.println("2. Re-enter Details");
             System.out.println("3. Cancel");
@@ -113,6 +127,7 @@ public class UserMaintenanceUI {
             switch (choice) {
                 case 1 -> {
                     boolean added = userMaintenance.addUser(tempUser);
+
                     if (added) {
                         System.out.println("User added successfully.");
 
@@ -122,35 +137,32 @@ public class UserMaintenanceUI {
                             System.out.println("2. Back");
                             System.out.print("Enter choice: ");
                             nextChoice = readInt();
-                            
-                            if(nextChoice != 1 && nextChoice != 2){
-                                System.out.println("Invalid choice.");
+
+                            if (nextChoice != 1 && nextChoice != 2) {
+                                System.out.println("Invalid choice. Please enter 1 or 2 only.");
                             }
                         } while (nextChoice != 1 && nextChoice != 2);
-                        
+
                         if (nextChoice == 1) {
-                            addUser();
-                        }else{
+                            choice = 1;
+                        } else {
                             System.out.println("Returning to main menu...");
                             return;
                         }
                     } else {
                         System.out.println("Failed to add user.");
-                        choice = 1;
+                        choice = 2;
                     }
                 }
-
                 case 2 -> System.out.println("Please re-enter user details.");
-
                 case 3 -> System.out.println("Add user cancelled.");
-
                 default -> {
                     System.out.println("Invalid choice.");
                     choice = 2;
                 }
             }
-        } while (choice == 2);
-        
+
+        } while (choice == 2 || choice == 1);
     }
 
     private void deleteUser() {
@@ -187,7 +199,8 @@ public class UserMaintenanceUI {
     }
 
     private void updateUser() {
-        System.out.println("\n=========== UPDATE USER ============");
+        System.out.println("\n========== UPDATE USER ==========");
+        System.out.println(userMaintenance.displayAllUsers());
         System.out.print("Enter User ID to update: ");
         String userId = scanner.nextLine().trim();
 
@@ -201,46 +214,53 @@ public class UserMaintenanceUI {
         System.out.println("\nCurrent User Information");
         System.out.println(existingUser);
 
-        // ===== Student ID =====
-        System.out.print("\nEnter New Student ID (press Enter to keep current): ");
-        String newStudentId = scanner.nextLine().trim();
+        String newRole = existingUser.getRole();
 
-        if (newStudentId.isEmpty()) {
-            newStudentId = existingUser.getStudentId();
+        System.out.print("\nEnter New Role ID (press Enter to keep current): ");
+        String newRoleId = scanner.nextLine().trim();
+
+        if (newRoleId.isEmpty()) {
+            newRoleId = existingUser.getRoleId();
         } else {
-            if (!userMaintenance.isValidStudentId(newStudentId)) {
-                System.out.println("Invalid Student ID format.");
-                return;
+            if (newRole.equalsIgnoreCase("Student")) {
+                if (!userMaintenance.isValidStudentId(newRoleId)) {
+                    System.out.println("Invalid Student ID format.");
+                    return;
+                }
+            } else {
+                if (!userMaintenance.isValidStaffId(newRoleId)) {
+                    System.out.println("Invalid Staff ID format.");
+                    return;
+                }
             }
 
-            User duplicateStudent = userMaintenance.findUserByStudentId(newStudentId);
-            if (duplicateStudent != null &&
-                !duplicateStudent.getUserId().equalsIgnoreCase(userId)) {
-                System.out.println("Student ID already exists.");
+            User duplicateUser = userMaintenance.findUserByRoleId(newRoleId);
+            if (duplicateUser != null && !duplicateUser.getUserId().equalsIgnoreCase(userId)) {
+                System.out.println("Role ID already exists.");
                 return;
             }
         }
 
-        // ===== Student Name =====
-        System.out.print("Enter New Student Name (press Enter to keep current): ");
-        String newStudentName = scanner.nextLine().trim();
+        System.out.print("Enter New Name (press Enter to keep current): ");
+        String newUserName = scanner.nextLine().trim();
 
-        if (newStudentName.isEmpty()) {
-            newStudentName = existingUser.getStudentName();
+        if (newUserName.isEmpty()) {
+            newUserName = existingUser.getUserName();
         }
 
-        System.out.println("\n----------- UPDATED USER PREVIEW ------------");
-        System.out.println("User ID    : " + userId);
-        System.out.println("Student ID : " + newStudentId);
-        System.out.println("Name       : " + newStudentName);
-        System.out.println("---------------------------------------------");
+        System.out.println("\n---------- UPDATED USER PREVIEW ----------");
+        System.out.println("User ID  : " + userId);
+        System.out.println("Role ID  : " + newRoleId);
+        System.out.println("Name     : " + newUserName);
+        System.out.println("Role     : " + newRole);
+        System.out.println("------------------------------------------");
         System.out.println("1. Confirm Update");
         System.out.println("2. Cancel");
         System.out.print("Enter choice: ");
         int choice = readInt();
 
         if (choice == 1) {
-            boolean updated = userMaintenance.updateUser(userId, newStudentId, newStudentName);
+            boolean updated = userMaintenance.updateUser(userId, newRoleId, newUserName, newRole);
 
             if (updated) {
                 System.out.println("User updated successfully.");

@@ -12,45 +12,55 @@ public class User implements Comparable<User>, Serializable {
     private static final long serialVersionUID = 1L;
 
     private String userId;
-    private String studentId;
-    private String studentName;
+    private String roleId;
+    private String userName;
+    private String role;
 
     public User() {
     }
 
-    public User(String userId, String studentId, String studentName) {
+    public User(String userId, String roleId, String userName, String role) {
         this.userId = userId;
-        this.studentId = studentId;
-        this.studentName = studentName;
+        this.roleId = roleId;
+        this.userName = userName;
+        this.role = role;
     }
 
     public String getUserId() {
         return userId;
     }
 
-    public String getStudentId() {
-        return studentId;
+    public String getRoleId() {
+        return roleId;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getRole() {
+        return role;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public void setRoleId(String roleId) {
+        this.roleId = roleId;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     @Override
     public int compareTo(User other) {
-        return this.userId.compareTo(other.userId);
+        return this.userId.compareToIgnoreCase(other.userId);
     }
     
     @Override
@@ -64,7 +74,7 @@ public class User implements Comparable<User>, Serializable {
 
     @Override
     public String toString() {
-        return String.format("User ID: %s, Student ID:  %s, Name: %s", userId, studentId, studentName);
+        return String.format("User ID: %s, Role ID:  %s, Name: %s, Role: %s", userId, roleId, userName, role);
     }
 }
 

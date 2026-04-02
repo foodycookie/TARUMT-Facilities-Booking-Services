@@ -12,7 +12,7 @@ import java.io.*;
 public class FacilityDAO {
     private String fileName;
             
-    public void saveToFile(SortedLinkedList<Facility> facilityList) {
+    public void saveToFile(SortedArrayList<Facility> facilityList) {
         File file = new File(fileName);
         
         try (ObjectOutputStream ooStream = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -25,13 +25,13 @@ public class FacilityDAO {
         }
     }
     
-    public SortedLinkedList<Facility> retrieveFromFile() {
+    public SortedArrayList<Facility> retrieveFromFile() {
         File file = new File(fileName);
         
-        SortedLinkedList<Facility> facilityList = new SortedLinkedList<>();
+        SortedArrayList<Facility> facilityList = new SortedArrayList<>();
         
         try (ObjectInputStream oiStream = new ObjectInputStream(new FileInputStream(file))) {
-            facilityList = (SortedLinkedList<Facility>) (oiStream.readObject());
+            facilityList = (SortedArrayList<Facility>) (oiStream.readObject());
             oiStream.close();
         } catch (FileNotFoundException ex) {
             System.out.println("\nNo such file");

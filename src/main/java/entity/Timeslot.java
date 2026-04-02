@@ -27,9 +27,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
     // startTime + 30 minutes
     private LocalTime endTime;
     private Status status;
-    // userId if BOOKED, staffId if BLOCKED, null if AVAILABLE
     private String bookedBy;
-    // null if AVAILABLE
     private String bookingId;
 
     public Timeslot(String facilityId, LocalDate date, LocalTime startTime) {
@@ -119,13 +117,13 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         return true;
     }
 
-    public boolean block(String staffId) {
+    public boolean block(String userId) {
         if (this.status == Status.BLOCKED) {
             return false;
         }
         
         this.status = Status.BLOCKED;
-        this.bookedBy = staffId;
+        this.bookedBy = userId;
         this.bookingId = null;
         
         return true;
@@ -165,12 +163,12 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
             return result;
         }
 
-        result = this.startTime.compareTo(other.startTime);
+        result = this.facilityId.compareTo(other.facilityId);
         if (result != 0) {
             return result;
         }
 
-        return this.facilityId.compareTo(other.facilityId);
+        return this.startTime.compareTo(other.startTime);
     }
     
     @Override

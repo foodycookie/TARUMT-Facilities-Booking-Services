@@ -122,14 +122,14 @@ public class TimeslotMaintenance {
     // UPDATE
     // -----------------------------------------
 
-    public boolean blockOneTimeslot(String timeslotId, String staffId) {
+    public boolean blockOneTimeslot(String timeslotId, String userId) {
         Timeslot timeslot = findTimeslotById(timeslotId);
         
         if (timeslot == null) {
             return false;
         }
         
-        boolean success = timeslot.block(staffId);
+        boolean success = timeslot.block(userId);
         
         if (success) {
             timeslotDAO.saveToFile(timeslotList);
@@ -154,13 +154,13 @@ public class TimeslotMaintenance {
         return success;
     }
     
-    public int blockMultipleTimeslots(SortedArrayList<Facility> facilityList, LocalDate date, String staffId) {
+    public int blockMultipleTimeslots(SortedArrayList<Facility> facilityList, LocalDate date, String userId) {
         int count = 0;
         SortedArrayList<Timeslot> timeslotList = getTimeslots(facilityList, date);
         Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
-            if (iterator.next().block(staffId)) {
+            if (iterator.next().block(userId)) {
                 count++;
             }
         }
@@ -197,12 +197,21 @@ public class TimeslotMaintenance {
     public int deleteAvailableTimeslotsForOneFacility(String facilityId, LocalDate date) {
         SortedArrayList<Timeslot> timeslotListToRemove = new SortedArrayList<>();
         Iterator<Timeslot> iterator = timeslotList.getIterator();
+        
+        boolean trigger = false;
 
         while (iterator.hasNext()) {
             Timeslot timeslot = iterator.next();
             
             if (timeslot.getFacilityId().equals(facilityId) && timeslot.getDate().equals(date) && timeslot.isAvailable()) {
                 timeslotListToRemove.add(timeslot);
+                trigger = true;
+            }
+            
+            else {
+                if (trigger) {
+                    break;
+                }
             }
         }
         

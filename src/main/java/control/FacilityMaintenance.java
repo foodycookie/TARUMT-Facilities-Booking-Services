@@ -4,6 +4,17 @@ import adt.SortedArrayList;
 import dao.FacilityDAO;
 import entity.Facility;
 
+
+
+// pls add:
+// getAllFacilities() - Return all facilities
+// getFacilitiesByFacilityName() - Return the facilities with the targeted facility name
+// getFacilitiesByRoomType() - Return the facilities with the targeted room type
+
+
+
+
+
 /**
  * Business-logic layer for the Facility module.
  *

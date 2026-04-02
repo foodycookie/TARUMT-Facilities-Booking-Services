@@ -4,9 +4,7 @@ package utility;
  *
  * @author Kat Tan
  */
-public class MessageUIExample {
-  
-  
+public class MessageUIExample {  
   public static void displayInvalidChoiceMessage() {
     System.out.println("\nInvalid choice");
   }

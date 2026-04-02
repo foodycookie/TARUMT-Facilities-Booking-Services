@@ -1,10 +1,11 @@
 package adt;
 
-import java.util.Iterator;
 import java.io.Serializable;
+import java.util.Iterator;
 
 /**
- * We assumed the entries in the list have positions that begin with 1.But in the array logic, it begins with 0.
+ * We assumed the entries in the list have positions that begin with 1.
+ * But in the array logic, it begins with 0.
  * @author
  * @param <T>
  */

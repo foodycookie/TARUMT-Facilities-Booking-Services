@@ -3,37 +3,37 @@ package control;
 import adt.SortedArrayList;
 import dao.FacilityDAO;
 import entity.Facility;
-
-
-
-// pls add:
-// getAllFacilities() - Return all facilities
-// getFacilitiesByFacilityName() - Return the facilities with the targeted facility name
-// getFacilitiesByRoomType() - Return the facilities with the targeted room type
-
-
-
-
+import static utility.SortedListHelper.compareStringIfExceedTarget;
 
 /**
  * Business-logic layer for the Facility module.
  *
- * ID format:
- *   L001, L002, … — Library Discussion Room / Individual Study Room
- *   C001, C002, … — Cyber Centre Discussion Room
- *   S001, S002, … — Sports Facilities
+ * <p><b>Facility ID format:</b>
+ * <ul>
+ *   <li>L001, L002, … — Library Discussion Room / Individual Study Room</li>
+ *   <li>C001, C002, … — Cyber Centre Discussion Room</li>
+ *   <li>S001, S002, … — Sports Facilities</li>
+ * </ul>
+ * Each prefix group maintains its own independent counter, so adding a Cyber
+ * room never bumps the Library sequence, and vice-versa.
  *
- * Each prefix group maintains its own independent counter so that adding a
- * Cyber room never bumps the Library sequence, and vice-versa.
+ * <p><b>Binary-search usage (ADT contract):</b><br>
+ * {@code SortedArrayList.add()} / {@code remove()} / {@code contains()} all call
+ * {@code binarySearch()} internally via {@code Facility.compareTo()} — O(log n).<br>
+ * The sort key is {@code facilityName → roomType → roomName}; {@code facilityId}
+ * is intentionally excluded from {@code compareTo()} so probe objects with a
+ * {@code null} ID work correctly for duplicate detection.
  *
- * Binary-search usage:
- *   SortedArrayList.add() / remove() / contains() all call binarySearch()
- *   internally via Facility.compareTo() (O(log n)).
- *   The sort key is facilityName → roomType → roomName — facilityId is NOT
- *   part of compareTo, so probe objects with a null ID work correctly.
+ * <p><b>When binary search cannot be used:</b><br>
+ * {@code findByFacilityId()} and {@code getFacilitiesByRoomType()} must do a
+ * linear scan because the list is sorted by name, not by ID or room type.
  *
- *   ID-based lookups (findByFacilityId) require a linear scan because the
- *   list is sorted by name, not by ID — same pattern as UserMaintenance.
+ * <p><b>Early-exit optimisation via {@code SortedListHelper}:</b><br>
+ * {@code getFacilitiesByFacilityName()} uses
+ * {@code SortedListHelper.compareStringIfExceedTarget()} to break out of the
+ * loop as soon as the current entry's facilityName exceeds the target
+ * alphabetically — exploiting the sorted order to avoid unnecessary comparisons.
+ * This is the same pattern used in {@code TimeslotMaintenance.findTimeslotById()}.
  *
  * @author (facility module)
  */
@@ -46,7 +46,6 @@ public class FacilityMaintenance {
     /** Relative path to the binary data file for facilities. */
     private static final String FACILITY_FILE = "data/facilities.dat";
 
-    // Prefix letters, one per facility category group
     /** Prefix for Library Discussion Room and Individual Study Room. */
     public static final String PREFIX_LIBRARY = "L";
 
@@ -65,7 +64,8 @@ public class FacilityMaintenance {
 
     /**
      * In-memory sorted list of facilities.
-     * Backed by SortedArrayList — add/remove/contains use binary search O(log n).
+     * Backed by {@link SortedArrayList} — add/remove/contains all use
+     * binary search in O(log n) via {@code Facility.compareTo()}.
      */
     private SortedArrayList<Facility> facilityList;
 
@@ -88,14 +88,108 @@ public class FacilityMaintenance {
     //  Query helpers                                                        //
     // ------------------------------------------------------------------ //
 
-    /** @return true if there are no facilities in the list */
+    /**
+     * @return {@code true} if there are no facilities in the list
+     */
     public boolean isEmpty() {
         return facilityList.isEmpty();
     }
 
-    /** @return total number of facilities currently stored */
+    /**
+     * @return total number of facilities currently stored
+     */
     public int getNumberOfFacilities() {
         return facilityList.getNumberOfEntries();
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Getter methods for the full list and filtered subsets               //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Returns the complete in-memory facility list in sorted order
+     * (facilityName → roomType → roomName).
+     *
+     * <p>Used by other control classes (e.g. {@code TimeslotMaintenance}) that
+     * need to iterate over all facilities — for example to generate time-slots
+     * for every facility on a given date.
+     *
+     * <p>The returned reference is the live internal list; callers should treat
+     * it as read-only and not mutate it directly.
+     *
+     * @return all facilities as a {@code SortedArrayList<Facility>}
+     */
+    public SortedArrayList<Facility> getAllFacilities() {
+        return facilityList;
+    }
+
+    /**
+     * Returns all facilities whose {@code facilityName} exactly matches the
+     * given name (case-insensitive).
+     *
+     * <p><b>Early-exit optimisation:</b> Because the internal list is sorted
+     * by {@code facilityName} as its primary key, once an entry's name
+     * exceeds the target alphabetically there can be no further matches.
+     * {@link utility.SortedListHelper#compareStringIfExceedTarget} is used to
+     * detect this condition and break out early — the same pattern used in
+     * {@code TimeslotMaintenance.findTimeslotById()}.
+     *
+     * <p>This is distinct from {@link #searchByFacilityName(String)}, which
+     * does a partial/keyword match and cannot use early exit safely.
+     *
+     * @param facilityName the exact facility category name to match,
+     *                     e.g. {@code "Library Discussion Room"}
+     * @return a {@code SortedArrayList<Facility>} of exact matches
+     *         (sorted by roomType → roomName); empty if none found
+     */
+    public SortedArrayList<Facility> getFacilitiesByFacilityName(String facilityName) {
+        SortedArrayList<Facility> results = new SortedArrayList<>();
+        if (facilityName == null) return results;
+
+        for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
+            Facility f = facilityList.getEntry(i);
+            if (f == null) continue;
+
+            // Early exit: list is sorted by facilityName — once the current
+            // entry's name exceeds the target, no further matches are possible.
+            if (compareStringIfExceedTarget(f.getFacilityName(), facilityName)) {
+                break;
+            }
+
+            if (f.getFacilityName().equalsIgnoreCase(facilityName)) {
+                results.add(f);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns all facilities whose {@code roomType} exactly matches the given
+     * type (case-insensitive).
+     *
+     * <p><b>Note on scan strategy:</b> The internal list is sorted by
+     * {@code facilityName}, not by {@code roomType}, so a full linear scan is
+     * unavoidable here. Early exit cannot be applied safely because matching
+     * room types are scattered across different facility-name groups.
+     *
+     * @param roomType the exact room type to match,
+     *                 e.g. {@code "Discussion Room (1 PC)"}
+     * @return a {@code SortedArrayList<Facility>} of matching facilities
+     *         (sorted by facilityName → roomName); empty if none found
+     */
+    public SortedArrayList<Facility> getFacilitiesByRoomType(String roomType) {
+        SortedArrayList<Facility> results = new SortedArrayList<>();
+        if (roomType == null) return results;
+
+        for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
+            Facility f = facilityList.getEntry(i);
+            if (f != null && f.getRoomType().equalsIgnoreCase(roomType)) {
+                results.add(f);
+            }
+        }
+
+        return results;
     }
 
     // ------------------------------------------------------------------ //
@@ -104,10 +198,11 @@ public class FacilityMaintenance {
 
     /**
      * Determines which prefix letter to use for a given facility name.
-     *
-     *   facilityName contains "Cyber"   → "C"
-     *   facilityName contains "Sports"  → "S"
-     *   anything else (Library / Study) → "L"
+     * <ul>
+     *   <li>Name contains {@code "cyber"}  → {@code "C"}</li>
+     *   <li>Name contains {@code "sport"}  → {@code "S"}</li>
+     *   <li>Anything else (Library / Study) → {@code "L"}</li>
+     * </ul>
      *
      * @param facilityName the facility category name entered by the user
      * @return the one-letter prefix string
@@ -117,23 +212,26 @@ public class FacilityMaintenance {
         String lower = facilityName.toLowerCase();
         if (lower.contains("cyber"))  return PREFIX_CYBER;
         if (lower.contains("sport"))  return PREFIX_SPORTS;
-        return PREFIX_LIBRARY;   // Library Discussion Room & Individual Study Room both use L
+        return PREFIX_LIBRARY;
     }
 
     /**
-     * Auto-generates the next facility ID for the given prefix group.
+     * Auto-generates the next facility ID for the prefix group that corresponds
+     * to the given facility name.
      *
-     * Scans the full list, keeps only entries whose ID starts with the
-     * resolved prefix, finds the highest numeric suffix among them, and
-     * returns prefix + (max + 1) zero-padded to ID_PAD_WIDTH digits.
+     * <p>Scans the full list, filters to entries whose ID starts with the
+     * resolved prefix, finds the highest numeric suffix, and returns
+     * {@code prefix + (max + 1)} zero-padded to {@value #ID_PAD_WIDTH} digits.
      *
-     * Examples:
-     *   existing: C001, C002  →  next Cyber ID = C003
+     * <p>Examples:
+     * <pre>
+     *   existing: C001, C002  →  next Cyber ID  = C003
      *   existing: L001        →  next Library ID = L002
      *   existing: (none)      →  first Sports ID = S001
+     * </pre>
      *
-     * @param facilityName the facility category name (used to resolve prefix)
-     * @return the next unique ID string, e.g. "L002", "C001", "S003"
+     * @param facilityName the facility category name (used to resolve the prefix)
+     * @return the next unique ID string, e.g. {@code "L002"}, {@code "C001"}
      */
     public String generateFacilityId(String facilityName) {
         String prefix = resolvePrefixFor(facilityName);
@@ -145,9 +243,7 @@ public class FacilityMaintenance {
                     && f.getFacilityId().startsWith(prefix)) {
                 try {
                     int num = Integer.parseInt(f.getFacilityId().substring(prefix.length()));
-                    if (num > max) {
-                        max = num;
-                    }
+                    if (num > max) max = num;
                 } catch (NumberFormatException ignored) {
                     // Skip malformed entries
                 }
@@ -162,7 +258,7 @@ public class FacilityMaintenance {
      * one letter prefix (L / C / S) followed by digits.
      *
      * @param facilityId the ID to validate
-     * @return true if the format is correct
+     * @return {@code true} if the format is correct
      */
     public boolean isValidFacilityId(String facilityId) {
         if (facilityId == null || facilityId.length() < 2) return false;
@@ -188,7 +284,7 @@ public class FacilityMaintenance {
      * A facility name is valid when it is non-null and non-blank.
      *
      * @param facilityName the candidate name
-     * @return true if valid
+     * @return {@code true} if valid
      */
     public boolean isValidFacilityName(String facilityName) {
         return facilityName != null && !facilityName.trim().isEmpty();
@@ -198,7 +294,7 @@ public class FacilityMaintenance {
      * A room type is valid when it is non-null and non-blank.
      *
      * @param roomType the candidate type string
-     * @return true if valid
+     * @return {@code true} if valid
      */
     public boolean isValidRoomType(String roomType) {
         return roomType != null && !roomType.trim().isEmpty();
@@ -208,43 +304,44 @@ public class FacilityMaintenance {
      * A room name is valid when it is non-null and non-blank.
      *
      * @param roomName the candidate room name / code
-     * @return true if valid
+     * @return {@code true} if valid
      */
     public boolean isValidRoomName(String roomName) {
         return roomName != null && !roomName.trim().isEmpty();
     }
 
     // ------------------------------------------------------------------ //
-    //  Duplicate detection (uses SortedArrayList binary search internally) //
+    //  Duplicate detection — O(log n) via binary search                    //
     // ------------------------------------------------------------------ //
 
     /**
-     * Checks whether a facility with exactly the same facilityName, roomType,
-     * and roomName already exists.
+     * Checks whether a facility with exactly the same {@code facilityName},
+     * {@code roomType}, and {@code roomName} already exists.
      *
-     * Uses SortedArrayList.contains() → binarySearch() → Facility.compareTo().
-     * Since compareTo() ignores facilityId, the probe object can use null.
-     * O(log n).
+     * <p>Delegates to {@code SortedArrayList.contains()}, which calls
+     * {@code binarySearch()} via {@code Facility.compareTo()} — O(log n).
+     * Because {@code compareTo()} ignores {@code facilityId}, the probe object
+     * is safely constructed with a {@code null} ID.
      *
      * @param facilityName the facility category name
      * @param roomType     the room equipment type
      * @param roomName     the specific room identifier
-     * @return true if a duplicate exists
+     * @return {@code true} if a duplicate exists
      */
     public boolean facilityExists(String facilityName, String roomType, String roomName) {
-        // null ID is safe — compareTo does not use facilityId
         Facility probe = new Facility(null, facilityName, roomType, roomName);
         return facilityList.contains(probe);
     }
 
     /**
-     * Checks for a duplicate excluding a specific facility (used during update).
+     * Checks for a duplicate while excluding one specific facility record.
+     * Used during update to allow keeping the same name fields unchanged.
      *
-     * @param excludeId    the facilityId of the record being edited
-     * @param facilityName new facility name
-     * @param roomType     new room type
-     * @param roomName     new room name
-     * @return true if another record with that combination already exists
+     * @param excludeId    the {@code facilityId} of the record being edited
+     * @param facilityName new facility name to check
+     * @param roomType     new room type to check
+     * @param roomName     new room name to check
+     * @return {@code true} if another record with that combination already exists
      */
     public boolean facilityExistsExcluding(String excludeId,
                                            String facilityName,
@@ -268,11 +365,13 @@ public class FacilityMaintenance {
     // ------------------------------------------------------------------ //
 
     /**
-     * Finds a facility by its exact string ID (e.g. "L001") using a linear
-     * scan. Linear scan is necessary because the list is sorted by name, not ID.
+     * Finds a facility by its exact string ID (e.g. {@code "L001"}).
+     *
+     * <p>Requires a linear scan because the list is sorted by name, not by ID.
+     * This is the same pattern as {@code UserMaintenance.findUserByUserId()}.
      *
      * @param facilityId the string ID to find
-     * @return the matching Facility, or null if not found
+     * @return the matching {@link Facility}, or {@code null} if not found
      */
     public Facility findByFacilityId(String facilityId) {
         if (facilityId == null) return null;
@@ -286,11 +385,18 @@ public class FacilityMaintenance {
     }
 
     /**
-     * Returns all facilities whose facilityName contains the given keyword
-     * (case-insensitive, partial match). Requires a linear scan.
+     * Returns all facilities whose {@code facilityName} contains the given
+     * keyword (case-insensitive, partial match).
      *
-     * @param keyword the search term
-     * @return a SortedArrayList of matching facilities (may be empty)
+     * <p><b>Why early exit is not used here:</b> This method performs a
+     * <em>substring</em> search, not an exact-match search. A keyword like
+     * {@code "Room"} could match entries spread across multiple alphabetically
+     * distinct facility names, so stopping at the first non-match would
+     * silently drop valid results. For exact-match filtering, use
+     * {@link #getFacilitiesByFacilityName(String)}.
+     *
+     * @param keyword the partial search term (e.g. {@code "Library"})
+     * @return a {@code SortedArrayList<Facility>} of matching facilities
      */
     public SortedArrayList<Facility> searchByFacilityName(String keyword) {
         SortedArrayList<Facility> results = new SortedArrayList<>();
@@ -306,11 +412,11 @@ public class FacilityMaintenance {
     }
 
     /**
-     * Returns all facilities whose roomName contains the given keyword
-     * (case-insensitive, partial match). Requires a linear scan.
+     * Returns all facilities whose {@code roomName} contains the given keyword
+     * (case-insensitive, partial match). Requires a full linear scan.
      *
-     * @param keyword the search term (e.g. "B002", "Pickleball")
-     * @return a SortedArrayList of matching facilities (may be empty)
+     * @param keyword the partial search term (e.g. {@code "B002"}, {@code "Pickleball"})
+     * @return a {@code SortedArrayList<Facility>} of matching facilities
      */
     public SortedArrayList<Facility> searchByRoomName(String keyword) {
         SortedArrayList<Facility> results = new SortedArrayList<>();
@@ -333,10 +439,12 @@ public class FacilityMaintenance {
      * Validates then inserts a new facility into the sorted list and persists
      * it to disk.
      *
-     * SortedArrayList.add() finds the insertion point via binary search O(log n).
+     * <p>{@code SortedArrayList.add()} locates the sorted insertion point via
+     * binary search in O(log n) before shifting elements to make room.
      *
-     * @param facility the Facility to add (facilityId must already be set)
-     * @return true if added successfully, false on validation or duplicate failure
+     * @param facility the {@link Facility} to add ({@code facilityId} must be set)
+     * @return {@code true} if added successfully,
+     *         {@code false} on validation or duplicate failure
      */
     public boolean addFacility(Facility facility) {
         if (facility == null)                                   return false;
@@ -345,14 +453,14 @@ public class FacilityMaintenance {
         if (!isValidRoomType(facility.getRoomType()))          return false;
         if (!isValidRoomName(facility.getRoomName()))          return false;
 
-        // Reject exact duplicate (binary search via SortedArrayList.contains)
+        // O(log n) duplicate check via SortedArrayList.contains() → binarySearch()
         if (facilityExists(facility.getFacilityName(),
                            facility.getRoomType(),
                            facility.getRoomName())) {
             return false;
         }
 
-        boolean added = facilityList.add(facility);
+        boolean added = facilityList.add(facility);  // O(log n) binary-search insertion
         if (added) saveToFile();
         return added;
     }
@@ -360,22 +468,22 @@ public class FacilityMaintenance {
     /**
      * Updates an existing facility identified by its string ID.
      *
-     * Strategy (mirrors UserMaintenance.updateUser):
-     *   1. Locate the old record by ID (linear scan).
-     *   2. Validate new fields.
-     *   3. Check no other record has the same name combination.
-     *   4. Remove old record (binary search by sort key).
-     *   5. Re-insert updated record (binary search for new position).
-     *   6. Persist; roll back if re-insert fails.
+     * <p>Strategy (mirrors {@code UserMaintenance.updateUser()}):
+     * <ol>
+     *   <li>Locate the old record by ID (linear scan — sorted by name, not ID).</li>
+     *   <li>Validate new field values.</li>
+     *   <li>Check no other record has the same name combination.</li>
+     *   <li>Remove the old record — binary search locates it via sort key.</li>
+     *   <li>Insert the updated record — binary search finds the new position.</li>
+     *   <li>Persist; roll back by re-inserting the original if re-insert fails.</li>
+     * </ol>
+     * The {@code facilityId} is never changed during an update.
      *
-     * Note: the facilityId is preserved unchanged during an update — only
-     * the name fields can change.
-     *
-     * @param facilityId      the ID of the facility to update, e.g. "L001"
+     * @param facilityId      the ID of the facility to update, e.g. {@code "L001"}
      * @param newFacilityName the new facility category name
      * @param newRoomType     the new room type
      * @param newRoomName     the new room name / identifier
-     * @return true if updated successfully, false otherwise
+     * @return {@code true} if updated successfully, {@code false} otherwise
      */
     public boolean updateFacility(String facilityId,
                                   String newFacilityName,
@@ -391,19 +499,17 @@ public class FacilityMaintenance {
             return false;
         }
 
-        // Remove old — binary search locates it via sort key
-        boolean removed = facilityList.remove(existing);
+        boolean removed = facilityList.remove(existing);  // O(log n) binary search
         if (!removed) return false;
 
         Facility updated = new Facility(facilityId, newFacilityName, newRoomType, newRoomName);
 
-        // Binary-search re-insertion at the new sorted position
-        boolean added = facilityList.add(updated);
+        boolean added = facilityList.add(updated);  // O(log n) binary-search insertion
         if (added) {
             saveToFile();
             return true;
         } else {
-            facilityList.add(existing); // roll back
+            facilityList.add(existing);  // roll back to keep list consistent
             return false;
         }
     }
@@ -411,14 +517,17 @@ public class FacilityMaintenance {
     /**
      * Removes the facility with the given string ID and persists the change.
      *
-     * @param facilityId the ID of the facility to delete, e.g. "C002"
-     * @return true if deleted, false if not found
+     * <p>{@code SortedArrayList.remove()} uses binary search to locate the
+     * entry via its sort key in O(log n).
+     *
+     * @param facilityId the ID of the facility to delete, e.g. {@code "C002"}
+     * @return {@code true} if deleted, {@code false} if not found
      */
     public boolean deleteFacility(String facilityId) {
         Facility existing = findByFacilityId(facilityId);
         if (existing == null) return false;
 
-        boolean deleted = facilityList.remove(existing); // binary search inside
+        boolean deleted = facilityList.remove(existing);  // O(log n) binary search
         if (deleted) saveToFile();
         return deleted;
     }
@@ -437,6 +546,7 @@ public class FacilityMaintenance {
 
     /**
      * Discards the in-memory list and reloads it from the data file.
+     * Useful for reverting unsaved in-memory changes.
      */
     public void reloadFromFile() {
         facilityList = facilityDAO.retrieveFromFile();
@@ -447,8 +557,8 @@ public class FacilityMaintenance {
     // ------------------------------------------------------------------ //
 
     /**
-     * Builds a formatted table of all facilities sorted by
-     * facilityName → roomType → roomName.
+     * Builds a formatted table of all facilities in sorted order
+     * (facilityName → roomType → roomName).
      *
      * @return a multi-line string ready for console output
      */
@@ -483,7 +593,7 @@ public class FacilityMaintenance {
     /**
      * Builds a formatted table for a subset of facilities (e.g. search results).
      *
-     * @param list the SortedArrayList to display
+     * @param list the {@code SortedArrayList} to display
      * @return a multi-line string ready for console output
      */
     public String displayFacilityList(SortedArrayList<Facility> list) {

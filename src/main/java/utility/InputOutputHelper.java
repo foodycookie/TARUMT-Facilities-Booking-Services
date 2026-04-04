@@ -2,7 +2,7 @@ package utility;
 
 import java.util.Scanner;
 
-public class Validation {  
+public class InputOutputHelper {  
     
     public static void displayInvalidChoiceMessage() {
         System.out.println("\nInvalid choice");

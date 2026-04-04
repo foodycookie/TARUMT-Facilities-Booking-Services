@@ -57,5 +57,9 @@ public class User implements Comparable<User>, Serializable {
     public String toString() {
         return String.format("User ID: %s, Name: %s, Role: %s", userId, userName, role);
     }
+    
+    public boolean isUser() {
+        return this.role.equalsIgnoreCase("User");
+    }
 }
 

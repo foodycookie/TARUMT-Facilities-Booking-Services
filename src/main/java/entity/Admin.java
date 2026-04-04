@@ -53,4 +53,8 @@ public class Admin implements Comparable<Admin>, Serializable{
         return String.format("Admin ID: %s, Name: %s, Role: %s", adminId, adminName, role);
     }
     
+    public boolean isAdmin() {
+        return this.role.equalsIgnoreCase("Admin");
+    }
+    
 }

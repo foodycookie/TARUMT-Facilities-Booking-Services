@@ -25,10 +25,10 @@ public class TimeslotMaintenanceUI {
     private final UserMaintenance userMaintenance;
     private final Scanner scanner;
 
-    public TimeslotMaintenanceUI(TimeslotMaintenance timeslotMaintenance, FacilityMaintenance facilityMaintenance, UserMaintenance userMaintenance) {
-        this.timeslotMaintenance = timeslotMaintenance;
-        this.facilityMaintenance = facilityMaintenance;
-        this.userMaintenance = userMaintenance;
+    public TimeslotMaintenanceUI() {
+        this.timeslotMaintenance = new TimeslotMaintenance();
+        this.facilityMaintenance = new FacilityMaintenance();
+        this.userMaintenance = new UserMaintenance();
         this.scanner = new Scanner(System.in);
     }
     
@@ -71,7 +71,7 @@ public class TimeslotMaintenanceUI {
         }
     }
     
-    public void mainMenuForAdmin(SortedArrayList<Facility> facilityList, String userId) {
+    public void mainMenuForAdmin(SortedArrayList<Facility> facilityList, String adminId, String adminName) {
         boolean running = true;
 
         while (running) {
@@ -87,8 +87,8 @@ public class TimeslotMaintenanceUI {
 
             switch (choice) {
                 case 1 -> menuView();
-                case 2 -> menuGenerate(facilityList);
-                case 3 -> menuBlock(facilityList, userId);
+                case 2 -> menuGenerate();
+                case 3 -> menuBlock(facilityList, adminId, adminName);
                 case 4 -> menuUnblock(facilityList);
                 case 5 -> menuDelete(facilityList);
                 case 0 -> running = false;
@@ -100,7 +100,7 @@ public class TimeslotMaintenanceUI {
     // CREATE
     // -----------------------------------------
     
-    private void menuGenerate(SortedArrayList<Facility> facilityList) {
+    private void menuGenerate() {
         System.out.println("--- Generate Slots ---");
         System.out.println("Generate for:");
         System.out.println("1. All Facilities");
@@ -137,8 +137,6 @@ public class TimeslotMaintenanceUI {
         int added;
 
         switch (facilityScopeSelection) {
-
-
             case 1 -> {
                 targetFacilityList = facilityMaintenance.getAllFacilities();
                 
@@ -252,19 +250,19 @@ public class TimeslotMaintenanceUI {
 
         SortedArrayList<Timeslot> timeslotList = timeslotMaintenance.getTimeslotsForMultipleFacilities(targetFacilityList, date);
         
-        printSlotTable(timeslotList, targetFacilityList, tableTitle);
+        printSlotTable(timeslotList, tableTitle, date);
         
         if (timeslotList.isEmpty()) {
             pause();
             return;
         }
 
-        // Rebuild the seenFacilities list in the same order as the table
-//        SortedArrayList<Facility> seenFacilities = new SortedArrayList<>();
+        // Rebuild the seenFacilitilyList list in the same order as the table
+//        SortedArrayList<Facility> seenFacilitilyList = new SortedArrayList<>();
 //        Iterator<Timeslot> timeslotIterator = slots.getIterator();
 //        while (timeslotIterator.hasNext()) {
 //            Facility facility = timeslotIterator.next().getFacility();
-//            if (!seenFacilities.contains(facility)) seenFacilities.add(facility);
+//            if (!seenFacilitilyList.contains(facility)) seenFacilitilyList.add(facility);
 //        }
 
         System.out.println("\nSelect a room index to view available slots, or 0 to go back:");
@@ -274,28 +272,27 @@ public class TimeslotMaintenanceUI {
 
         Facility chosenFacility = targetFacilityList.getEntry(roomSelection);
         
+        if (true) {
+            printAllBlocksForRoomForAdmin(chosenFacility, date, "A001", "Admin Test Hi");
+        }
+        
+        else {
+            printAvailableBlocksForRoomForUser(chosenFacility, date);
+        }
+        
 //        if (userMaintenance.currentUser.isAdmin()) {
-//            printAllBlocksForRoomForAdmin(timeslotList, chosenFacility, currentUser.getUserId());
+//            printAllBlocksForRoomForAdmin(chosenFacility, date, currentUser.getAdminId(), currentUser.getAdminName());
 //        }
 //        
 //        else {
-//            printAvailableBlocksForRoomForUser(timeslotList, chosenFacility);
+//            printAvailableBlocksForRoomForUser(chosenFacility, date);
 //        }
     }
 
-    private void printAvailableBlocksForRoomForUser(SortedArrayList<Timeslot> timeslotList, Facility facility) {
+    private void printAvailableBlocksForRoomForUser(Facility facility, LocalDate date) {
         System.out.println("Available slots for: " + facility.getRoomName());
-
-        SortedArrayList<Timeslot> availableTimeslot = new SortedArrayList<>();
-        Iterator<Timeslot> iterator = timeslotList.getIterator();
         
-        while (iterator.hasNext()) {
-            Timeslot timeslot = iterator.next();
-            
-            if (timeslot.getFacility().getFacilityId().equals(facility.getFacilityId()) && timeslot.isAvailable()) {
-                availableTimeslot.add(timeslot);
-            }
-        }
+        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
 
         if (availableTimeslot.isEmpty()) {
             System.out.println("No available slots for this room");
@@ -344,18 +341,10 @@ public class TimeslotMaintenanceUI {
         }
     }
     
-    private void printAllBlocksForRoomForAdmin(SortedArrayList<Timeslot> slots, Facility facility, String userId) {
-        SortedArrayList<Timeslot> timeslotList = new SortedArrayList<>();
-        Iterator<Timeslot> iterator = slots.getIterator();
+    private void printAllBlocksForRoomForAdmin(Facility facility, LocalDate date, String adminId, String adminName) {
+        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
         
-        while (iterator.hasNext()) {
-            Timeslot timeslot = iterator.next();
-            if (timeslot.getFacility().getFacilityId().equals(facility.getFacilityId())) {
-                timeslotList.add(timeslot);
-            }
-        }
-
-        if (timeslotList.isEmpty()) {
+        if (availableTimeslot.isEmpty()) {
             System.out.println("No slots found for this room");
             return;
         }
@@ -366,9 +355,9 @@ public class TimeslotMaintenanceUI {
             System.out.println("All slots for: " + facility.getRoomName());
             System.out.printf("%-4s %-10s %-10s %-12s %-15s%n", "No.", "Start", "End", "Status", "Booked/Blocked By");
 
-            for (int i = 1; i <= timeslotList.getNumberOfEntries(); i++) {
-                Timeslot timeslot = timeslotList.getEntry(i);
-                String by = timeslot.getBookedBy() != null ? timeslot.getBookedBy() : "-";
+            for (int i = 1; i <= availableTimeslot.getNumberOfEntries(); i++) {
+                Timeslot timeslot = availableTimeslot.getEntry(i);
+                String by = timeslot.getBlockedByName()!= null ? timeslot.getBlockedByName() : "-";
                 String status = switch (timeslot.getStatus()) {
                     case BOOKED   -> "[BOOKED]   ";
                     case BLOCKED  -> "[BLOCKED]  ";
@@ -383,7 +372,7 @@ public class TimeslotMaintenanceUI {
                         by);
             }
 
-            System.out.println("Total: " + timeslotList.getNumberOfEntries() + " slot(s)");
+            System.out.println("Total: " + availableTimeslot.getNumberOfEntries() + " slot(s)");
 
             System.out.println("Actions:");
             System.out.println("1. Block a slot");
@@ -394,9 +383,9 @@ public class TimeslotMaintenanceUI {
             int actionSelection = readInt("  Select action: ", 0, 3);
 
             switch (actionSelection) {
-                case 1 -> menuBlockForChosenFacility(timeslotList, userId);
-                case 2 -> menuUnblockForChosenFacility(timeslotList);
-                case 3 -> menuDeleteForChosenFacility(timeslotList);
+                case 1 -> menuBlockForChosenFacility(availableTimeslot, adminId, adminName);
+                case 2 -> menuUnblockForChosenFacility(availableTimeslot);
+                case 3 -> menuDeleteForChosenFacility(availableTimeslot);
                 case 0 -> managing = false;
             }
         }
@@ -406,7 +395,7 @@ public class TimeslotMaintenanceUI {
     // UPDATE
     // -----------------------------------------
 
-    private void menuBlock(SortedArrayList<Facility> facilityList, String userId) {
+    private void menuBlock(SortedArrayList<Facility> facilityList, String adminId, String adminName) {
         System.out.println("--- Block Slots ---");
         System.out.println("Block by:");
         System.out.println("1. By Facility Name for a Day");
@@ -447,7 +436,7 @@ public class TimeslotMaintenanceUI {
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(facilityName);
                 
-                count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, userId);
+                count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, adminId, adminName);
                 
                 System.out.println("Blocked " + count + " slot(s) for [" + facilityName + "] on " + date.format(DATE_FORMAT));
             }
@@ -458,7 +447,7 @@ public class TimeslotMaintenanceUI {
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByRoomType(roomType);
                 
-                count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, userId);
+                count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, adminId, adminName);
                 
                 System.out.println("Blocked " + count + " slot(s) for room type [" + roomType + "] on " + date.format(DATE_FORMAT));
             }
@@ -467,7 +456,7 @@ public class TimeslotMaintenanceUI {
                 Facility facility = readFacility(facilityMaintenance.getAllFacilities());
                 if (facility == null) return;
                 
-                count = timeslotMaintenance.blockMultipleTimeslotsForOneFacility(facility, date, userId);
+                count = timeslotMaintenance.blockMultipleTimeslotsForOneFacility(facility, date, adminId, adminName);
 
                 System.out.println("Blocked " + count + " slot(s) for Facility " + facility.getRoomName()+ " on " + date.format(DATE_FORMAT) + ".");
             }
@@ -476,7 +465,7 @@ public class TimeslotMaintenanceUI {
         pause();
     }
 
-    private void menuBlockForChosenFacility(SortedArrayList<Timeslot> timeslotList, String userId) {
+    private void menuBlockForChosenFacility(SortedArrayList<Timeslot> timeslotList, String adminId, String adminName) {
         int timeslotSelection = readInt("  Select slot No. to block: ", 1, timeslotList.getNumberOfEntries());
         Timeslot chosenTimeslot = timeslotList.getEntry(timeslotSelection);
 
@@ -485,7 +474,7 @@ public class TimeslotMaintenanceUI {
             return;
         }
         
-        boolean status = timeslotMaintenance.blockOneTimeslot(chosenTimeslot.getTimeslotId(), userId);
+        boolean status = timeslotMaintenance.blockOneTimeslot(chosenTimeslot.getTimeslotId(), adminId, adminName);
 
         if (status) {
             System.out.println("Slot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " blocked successfully");
@@ -702,7 +691,7 @@ public class TimeslotMaintenanceUI {
     // TABLE UTILITY
     // -----------------------------------------
     
-    public void printSlotTable(SortedArrayList<Timeslot> timeslotList, SortedArrayList<Facility> facilityList, String title) {
+    private void printSlotTable(SortedArrayList<Timeslot> timeslotList, String title, LocalDate date) {
         System.out.println("--- " + title + " ---");
         System.out.println("Legend:  --=Available   /=Booked   X=Blocked");
 
@@ -720,19 +709,19 @@ public class TimeslotMaintenanceUI {
             return;
         }
 
-        SortedArrayList<Facility> seenFacilities = new SortedArrayList<>();
+        SortedArrayList<Facility> seenFacilitilyList = new SortedArrayList<>();
         Iterator<Timeslot> timeslotIterator = timeslotList.getIterator();
         
         while (timeslotIterator.hasNext()) {
             Facility facility = timeslotIterator.next().getFacility();
             
-            if (!seenFacilities.contains(facility)) {
-                seenFacilities.add(facility);
+            if (!seenFacilitilyList.contains(facility)) {
+                seenFacilitilyList.add(facility);
             }
         }
 
         int rowNum = 1;
-        Iterator<Facility> facilityIterator = seenFacilities.getIterator();
+        Iterator<Facility> facilityIterator = seenFacilitilyList.getIterator();
         
         while (facilityIterator.hasNext()) {
             Facility facility = facilityIterator.next();
@@ -740,7 +729,7 @@ public class TimeslotMaintenanceUI {
             System.out.printf("%-" + COLUMN_INDEX + "d | %-" + COLUMN_WIDTH_ROOM_NAME + "s", rowNum++, truncate(facility.getRoomName(), COLUMN_WIDTH_ROOM_NAME));
 
             for (LocalTime mark : TIME_MARKS) {
-                Timeslot timeslot = findSlot(timeslotList, facility, mark);
+                Timeslot timeslot = findSlot(facility, date, mark);
                 String cell = buildCell(timeslot);
                 System.out.printf(" | %-" + COLUMN_WIDTH_START_TIME + "s", cell);
             }
@@ -749,16 +738,18 @@ public class TimeslotMaintenanceUI {
         }
 
         printDivider("-", calcTableWidth());
-        System.out.println("Total rooms: " + seenFacilities.getNumberOfEntries());
+        System.out.println("Total rooms: " + seenFacilitilyList.getNumberOfEntries());
         printDivider("=", calcTableWidth());
     }
 
-    private Timeslot findSlot(SortedArrayList<Timeslot> slots, Facility facility, LocalTime time) {
-        Iterator<Timeslot> iterator = slots.getIterator();
+    private Timeslot findSlot(Facility facility, LocalDate date, LocalTime startTime) {
+        SortedArrayList<Timeslot> timeslotList = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
             Timeslot timeslot = iterator.next();
-            if (timeslot.getFacility().getFacilityId().equals(facility.getFacilityId()) && timeslot.getStartTime().equals(time)) {
+            
+            if (timeslot.getStartTime().equals(startTime)) {
                 return timeslot;
             }
         }

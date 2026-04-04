@@ -4,7 +4,7 @@ import adt.*;
 import boundary.BookingMaintenanceUI;
 import dao.BookingDAO;
 import entity.Booking;
-import utility.MessageUIExample;
+import utility.InputOutputHelper;
 
 public class BookingMaintenance {
 
@@ -26,7 +26,7 @@ public class BookingMaintenance {
             switch (choice) {
 
                 case 0:
-                    MessageUIExample.displayExitMessage();
+                    InputOutputHelper.displayExitMessage();
                     break;
 
                 case 1:
@@ -53,7 +53,7 @@ public class BookingMaintenance {
                     break;
 
                 default:
-                    MessageUIExample.displayInvalidChoiceMessage();
+                    InputOutputHelper.displayInvalidChoiceMessage();
             }
 
         } while (choice != 0);

@@ -72,7 +72,7 @@ public class BookingMaintenanceUI {
         }
 
         if (!bookingControl.isExistingUser(userId)) {
-            System.out.println("User ID does not exist.");
+            System.out.println("User ID does not exist in user.dat.");
             return;
         }
 

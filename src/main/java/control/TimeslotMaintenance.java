@@ -16,6 +16,10 @@ public class TimeslotMaintenance {
         timeslotDAO = new TimeslotDAO("src/main/resources/timeslot.dat");
         timeslotListDB = timeslotDAO.retrieveFromFile();
     }
+
+    public SortedArrayList<Timeslot> getTimeslotListDB() {
+        return timeslotListDB;
+    }
     
     // -----------------------------------------
     // CREATE

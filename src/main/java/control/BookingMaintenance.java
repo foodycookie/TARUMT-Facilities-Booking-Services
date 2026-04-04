@@ -4,7 +4,6 @@ import adt.SortedArrayList;
 import entity.Booking;
 import entity.Facility;
 import entity.User;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -19,7 +18,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class BookingMaintenance {
 
-    private static final String BOOKING_FILE = "booking.dat";
+    private static final String BOOKING_FILE = "src/main/resources/booking.dat";
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private SortedArrayList<Booking> bookingList;

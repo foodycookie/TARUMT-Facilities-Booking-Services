@@ -15,7 +15,7 @@ public class Booking implements Serializable, Comparable<Booking> {
     private String roomType;
     private String roomName;
     private String date;          // Format: YYYY-MM-DD
-    private String timeSlot;      // Format: HH:MM-HH:MM
+    private String timeSlotId;      // Format: HH:MM-HH:MM
 
     // Default constructor (required for file deserialization)
     public Booking() {}
@@ -23,16 +23,17 @@ public class Booking implements Serializable, Comparable<Booking> {
     // Full constructor
     public Booking(String bookingID, String userID,
                Facility facility,
-               String date, String timeSlot) {
+               String date,
+               Timeslot timeSlot) {
 
-        this.bookingID = bookingID;
-        this.userID = userID;
-        this.facilityID = facility.getFacilityId();
-        this.facilityName = facility.getFacilityName();
-        this.roomType = facility.getRoomType();
-        this.roomName = facility.getRoomName();
-        this.date = date;
-        this.timeSlot = timeSlot;
+    this.bookingID = bookingID;
+    this.userID = userID;
+    this.facilityID = facility.getFacilityId();
+    this.facilityName = facility.getFacilityName();
+    this.roomType = facility.getRoomType();
+    this.roomName = facility.getRoomName();
+    this.date = date;
+    this.timeSlotId = timeSlot.getTimeslotId();
 }
 
     // ====================== Getters & Setters ======================
@@ -57,8 +58,8 @@ public class Booking implements Serializable, Comparable<Booking> {
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
 
-    public String getTimeSlot() { return timeSlot; }
-    public void setTimeSlot(String timeSlot) { this.timeSlot = timeSlot; }
+    public String getTimeSlot() { return timeSlotId; }
+    public void setTimeSlot(String timeSlotId) { this.timeSlotId = timeSlotId; }
 
     // ====================== Critical Methods ======================
 
@@ -87,7 +88,7 @@ public class Booking implements Serializable, Comparable<Booking> {
         if (dateCompare != 0) return dateCompare;
 
         // 2. Secondary: TimeSlot
-        int timeCompare = this.timeSlot.compareTo(other.timeSlot);
+        int timeCompare = this.timeSlotId.compareTo(other.timeSlotId);
         if (timeCompare != 0) return timeCompare;
 
         // 3. Tertiary: BookingID
@@ -99,7 +100,7 @@ public class Booking implements Serializable, Comparable<Booking> {
     @Override
     public String toString() {
         return String.format("B%s | User:%s | %s | %s | %s | %s",
-                bookingID, userID, roomName, date, timeSlot, facilityName);
+                bookingID, userID, roomName, date, timeSlotId, facilityName);
     }
 
     /**
@@ -111,13 +112,13 @@ public class Booking implements Serializable, Comparable<Booking> {
                 userID,
                 roomName != null ? roomName : "N/A",
                 date,
-                timeSlot);
+                timeSlotId);
     }
 
     /**
      * Short summary for reports
      */
     public String toSummary() {
-        return "Booking " + bookingID + " - " + roomName + " on " + date + " (" + timeSlot + ")";
+        return "Booking " + bookingID + " - " + roomName + " on " + date + " (" + timeSlotId + ")";
     }
 }

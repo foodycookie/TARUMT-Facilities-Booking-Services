@@ -14,7 +14,7 @@ public class UserMaintenance {
     private final UserDAO userDAO;
 
     public UserMaintenance() {
-        userDAO = new UserDAO("user.dat");
+        userDAO = new UserDAO("src/main/resources/user.dat");
         userList = userDAO.retrieveFromFile();
     }
 

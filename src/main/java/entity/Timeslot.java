@@ -10,9 +10,9 @@ import java.time.format.DateTimeFormatter;
  */
 
 public class Timeslot implements Comparable<Timeslot>, Serializable {
-    public static final LocalTime DAY_START = LocalTime.of(9, 0);
-    public static final LocalTime DAY_END = LocalTime.of(19, 0);
-    public static final int MINUTES_PER_BLOCK = 60;
+    public static final LocalTime DAY_START = LocalTime.of(8, 0);
+    public static final LocalTime DAY_END = LocalTime.of(20, 0);
+    public static final int MINUTES_PER_BLOCK = 120;
     
     public enum Status {
         AVAILABLE,

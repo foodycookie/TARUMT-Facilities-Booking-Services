@@ -3,7 +3,6 @@ package boundary;
 import adt.SortedArrayList;
 import control.FacilityMaintenance;
 import control.TimeslotMaintenance;
-import control.UserMaintenance;
 import entity.Facility;
 import entity.Timeslot;
 import java.time.LocalDate;
@@ -17,37 +16,28 @@ public class TimeslotMaintenanceUI {
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final int COLUMN_INDEX = 4;
-    private static final int COLUMN_WIDTH_ROOM_NAME = 20;
-    private static final int COLUMN_WIDTH_START_TIME = 6;
+    private static final int COLUMN_WIDTH_ROOM_NAME = 30;
+    private static final int COLUMN_WIDTH_ROOM_TYPE = 30;
+    private static final int COLUMN_WIDTH_START_TIME = 13;
 
     private final TimeslotMaintenance timeslotMaintenance;
     private final FacilityMaintenance facilityMaintenance;
-    private final UserMaintenance userMaintenance;
     private final Scanner scanner;
 
     public TimeslotMaintenanceUI() {
         this.timeslotMaintenance = new TimeslotMaintenance();
         this.facilityMaintenance = new FacilityMaintenance();
-        this.userMaintenance = new UserMaintenance();
         this.scanner = new Scanner(System.in);
     }
     
-    private static final LocalTime[] TIME_MARKS = buildTimeMarks();
+    private static final SortedArrayList<LocalTime> TIME_MARKS = buildTimeMarks();
 
-    private static LocalTime[] buildTimeMarks() {
-        int count = 0;
+    private static SortedArrayList<LocalTime> buildTimeMarks() {
+        SortedArrayList<LocalTime> marks = new SortedArrayList<>();
         LocalTime cursor = Timeslot.DAY_START;
         
         while (cursor.isBefore(Timeslot.DAY_END)) {
-            count++;
-            cursor = cursor.plusMinutes(Timeslot.MINUTES_PER_BLOCK);
-        }
-        
-        LocalTime[] marks = new LocalTime[count];
-        cursor = Timeslot.DAY_START;
-        
-        for (int i = 0; i < count; i++) {
-            marks[i] = cursor;
+            marks.add(cursor);
             cursor = cursor.plusMinutes(Timeslot.MINUTES_PER_BLOCK);
         }
         
@@ -58,7 +48,7 @@ public class TimeslotMaintenanceUI {
         boolean running = true;
 
         while (running) {
-            System.out.println("--- Main Menu ---");
+            System.out.println("\n--- Main Menu ---");
             System.out.println("1. View Slots");
             System.out.println("0. Back");
             
@@ -74,8 +64,8 @@ public class TimeslotMaintenanceUI {
     public void mainMenuForAdmin(SortedArrayList<Facility> facilityList, String adminId, String adminName) {
         boolean running = true;
 
-        while (running) {
-            System.out.println("--- Timeslot Management ---");
+        while (running) {            
+            System.out.println("\n--- Timeslot Management ---");
             System.out.println("1. View Slots");
             System.out.println("2. Generate Slots");
             System.out.println("3. Block Slots");
@@ -101,7 +91,7 @@ public class TimeslotMaintenanceUI {
     // -----------------------------------------
     
     private void menuGenerate() {
-        System.out.println("--- Generate Slots ---");
+        System.out.println("\n--- Generate Slots ---");
         System.out.println("Generate for:");
         System.out.println("1. All Facilities");
         System.out.println("2. By Facility Name");
@@ -111,29 +101,10 @@ public class TimeslotMaintenanceUI {
 
         int facilityScopeSelection = readInt("Select scope: ", 0, 4);
         if (facilityScopeSelection == 0) return;
-        
-        LocalDate date = null;
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
-        
-        System.out.println("--- Generate Slots ---");
-        System.out.println("Choose a date (today/tomorrow only):");
-        System.out.println("1. " + today.format(DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
-        System.out.println("0. Back");
-        
-        int dateSelection = readInt("Select date: ", 0, 2);
-        if (dateSelection == 0) return;
-        
-        if (dateSelection == 1) {
-            date = today;
-        }
-        
-        else if (dateSelection == 2) {
-            date = tomorrow;
-        }
+                
+        LocalDate date = readDate();
 
-        SortedArrayList<Facility> targetFacilityList;
+        SortedArrayList<Facility> targetFacilityList = null;
         int added;
 
         switch (facilityScopeSelection) {
@@ -185,7 +156,7 @@ public class TimeslotMaintenanceUI {
     // -----------------------------------------
 
     private void menuView() {
-        System.out.println("--- View Slots ---");
+        System.out.println("\n--- View Slots ---");
         System.out.println("Select Facility Name:");
         System.out.println("1. Cyber Centre Room");
         System.out.println("2. Library Room");
@@ -197,54 +168,36 @@ public class TimeslotMaintenanceUI {
         int facilityScopeSelection = readInt("Select facility: ", 0, 5);
         if (facilityScopeSelection == 0) return;
         
-        LocalDate date = null;
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
-        
-        System.out.println("Choose a date (today/tomorrow):");
-        System.out.println("1. " + today.format(DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
-        System.out.println("0. Back");
-        
-        int dateSelection = readInt("Select date: ", 0, 2);
-        if (dateSelection == 0) return;
-        
-        if (dateSelection == 1) {
-            date = today;
-        }
-        
-        else if (dateSelection == 2) {
-            date = tomorrow;
-        }
+        LocalDate date = readDate();
 
-        SortedArrayList<Facility> targetFacilityList;
-        String tableTitle;
+        SortedArrayList<Facility> targetFacilityList = null;
+        String tableTitle = "";
 
         switch (facilityScopeSelection) {
 
             case 1 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Cyber Centre Discussion Room");
-                tableTitle = "Cyber Centre Discussion Room — " + date.format(DATE_FORMAT);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Cyber Centre Room");
+                tableTitle = "Cyber Centre Room - " + date.format(DATE_FORMAT);
             }
             
             case 2 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Library Discussion Room");
-                tableTitle = "Library Discussion Room — " + date.format(DATE_FORMAT);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Library Room");
+                tableTitle = "Library Room - " + date.format(DATE_FORMAT);
             }
             
             case 3 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Sports Facilities");
-                tableTitle = "Sports Facilities — " + date.format(DATE_FORMAT);
+                tableTitle = "Sports Facilities - " + date.format(DATE_FORMAT);
             }
 
             case 4 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Other");
-                tableTitle = "Other — " + date.format(DATE_FORMAT);
+                tableTitle = "Other - " + date.format(DATE_FORMAT);
             }
             
-            default -> {
+            case 5 -> {
                 targetFacilityList = facilityMaintenance.getAllFacilities();
-                tableTitle = "All Facilities — " + date.format(DATE_FORMAT);
+                tableTitle = "All Facilities - " + date.format(DATE_FORMAT);
             }
         }
 
@@ -257,114 +210,90 @@ public class TimeslotMaintenanceUI {
             return;
         }
 
-        // Rebuild the seenFacilitilyList list in the same order as the table
-//        SortedArrayList<Facility> seenFacilitilyList = new SortedArrayList<>();
-//        Iterator<Timeslot> timeslotIterator = slots.getIterator();
-//        while (timeslotIterator.hasNext()) {
-//            Facility facility = timeslotIterator.next().getFacility();
-//            if (!seenFacilitilyList.contains(facility)) seenFacilitilyList.add(facility);
-//        }
-
-        System.out.println("\nSelect a room index to view available slots, or 0 to go back:");
+        System.out.println("Select a room index to view available slots, or 0 to go back:");
         
         int roomSelection = readInt("Room No.: ", 0, targetFacilityList.getNumberOfEntries());
         if (roomSelection == 0) return;
 
         Facility chosenFacility = targetFacilityList.getEntry(roomSelection);
         
-        if (true) {
-            printAllBlocksForRoomForAdmin(chosenFacility, date, "A001", "Admin Test Hi");
-        }
-        
-        else {
-            printAvailableBlocksForRoomForUser(chosenFacility, date);
-        }
-        
 //        if (userMaintenance.currentUser.isAdmin()) {
-//            printAllBlocksForRoomForAdmin(chosenFacility, date, currentUser.getAdminId(), currentUser.getAdminName());
+//            menuDisplayAllBlockForAdmin(chosenFacility, date, currentUser.getAdminId(), currentUser.getAdminName());
 //        }
 //        
 //        else {
-//            printAvailableBlocksForRoomForUser(chosenFacility, date);
+//            menuDisplayAlvailableBlockForUser(chosenFacility, date);
 //        }
     }
-
-    private void printAvailableBlocksForRoomForUser(Facility facility, LocalDate date) {
-        System.out.println("Available slots for: " + facility.getRoomName());
+    
+    private void menuDisplayAllBlockForUser(Facility facility, LocalDate date, String userId, String userName) {
+        boolean browsing = true;
         
-        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
+        while (browsing) {
+            SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
 
-        if (availableTimeslot.isEmpty()) {
-            System.out.println("No available slots for this room");
-            return;
-        }
-
-        // Display consecutive availableTimeslot ranges like 08:00 – 10:00 covers 2 blocks
-        // Group into consecutive runs so user sees natural booking windows
-        int index = 1;
-        int i = 1;
-        
-        while (i <= availableTimeslot.getNumberOfEntries()) {
-            Timeslot start = availableTimeslot.getEntry(i);
-            Timeslot end   = start;
-
-            // Extend the run while blocks are consecutive and count <= MAX_CONSECUTIVE_BLOCKS
-            int runLength = 1;
+            if (availableTimeslot == null || availableTimeslot.isEmpty()) {
+                System.out.println("\nNo slots found for this room");
+                return;
+            }
             
-            while (i + runLength <= availableTimeslot.getNumberOfEntries() && runLength < TimeslotMaintenance.MAX_CONSECUTIVE_BLOCKS) {
-                Timeslot next = availableTimeslot.getEntry(i + runLength);
-                
-                if (end.getEndTime().equals(next.getStartTime())) {
-                    end = next;
-                    runLength++;
-                } 
-                
-                else {
-                    break;
-                }
+            System.out.println("\nAll slots for: " + facility.getRoomName());
+            System.out.printf("%-4s %-10s %-10s %-12s%n", "No.", "Start", "End", "Status");
+
+            for (int i = 1; i <= availableTimeslot.getNumberOfEntries(); i++) {
+                Timeslot timeslot = availableTimeslot.getEntry(i);
+                String status = switch (timeslot.getStatus()) {
+                    case BOOKED -> "[BOOKED]";
+                    case BLOCKED -> "[BLOCKED]";
+                    default -> "[AVAILABLE]";
+                };
+
+                System.out.printf("%-4d %-10s %-10s %-12s%n",
+                        i,
+                        timeslot.getStartTime().format(TIME_FORMAT),
+                        timeslot.getEndTime().format(TIME_FORMAT),
+                        status);
             }
 
-            // Print each possible booking window starting from this block
-            // If 2 consecutive blocks exist: show 1-block, 2-block options
-            for (int len = 1; len <= runLength; len++) {
-                Timeslot endSlot = availableTimeslot.getEntry(i + len - 1);
-                
-                System.out.printf("%2d. %s – %s  (%d block(s), %d min)%n",
-                        index++,
-                        start.getStartTime().format(TIME_FORMAT),
-                        endSlot.getEndTime().format(TIME_FORMAT),
-                        len,
-                        len * Timeslot.MINUTES_PER_BLOCK);
-            }
+            System.out.println("Total: " + availableTimeslot.getNumberOfEntries() + " slot(s)");
 
-            i++;
+            System.out.println("Actions:");
+            System.out.println("1. Book a slot");
+            System.out.println("0. Back");
+
+            int actionSelection = readInt("  Select action: ", 0, 1);
+
+            switch (actionSelection) {
+                // case 1 -> menuBookForChosenFacility(availableTimeslot, userId, userName);
+                case 0 -> browsing = false;
+            }
         }
     }
     
-    private void printAllBlocksForRoomForAdmin(Facility facility, LocalDate date, String adminId, String adminName) {
-        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
+    private void menuDisplayAllBlockForAdmin(Facility facility, LocalDate date, String adminId, String adminName) {
+        boolean browsing = true;
         
-        if (availableTimeslot.isEmpty()) {
-            System.out.println("No slots found for this room");
-            return;
-        }
-
-        boolean managing = true;
+        while (browsing) {
+            SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
         
-        while (managing) {
-            System.out.println("All slots for: " + facility.getRoomName());
+            if (availableTimeslot == null || availableTimeslot.isEmpty()) {
+                System.out.println("\nNo slots found for this room");
+                return;
+            }
+            
+            System.out.println("\nAll slots for: " + facility.getRoomName());
             System.out.printf("%-4s %-10s %-10s %-12s %-15s%n", "No.", "Start", "End", "Status", "Booked/Blocked By");
 
             for (int i = 1; i <= availableTimeslot.getNumberOfEntries(); i++) {
                 Timeslot timeslot = availableTimeslot.getEntry(i);
                 String by = timeslot.getBlockedByName()!= null ? timeslot.getBlockedByName() : "-";
                 String status = switch (timeslot.getStatus()) {
-                    case BOOKED   -> "[BOOKED]   ";
-                    case BLOCKED  -> "[BLOCKED]  ";
-                    default       -> "[AVAILABLE]";
+                    case BOOKED -> "[BOOKED]";
+                    case BLOCKED -> "[BLOCKED]";
+                    default -> "[AVAILABLE]";
                 };
 
-                System.out.printf("  %-4d %-10s %-10s %-12s %-15s%n",
+                System.out.printf("%-4d %-10s %-10s %-12s %-15s%n",
                         i,
                         timeslot.getStartTime().format(TIME_FORMAT),
                         timeslot.getEndTime().format(TIME_FORMAT),
@@ -386,7 +315,7 @@ public class TimeslotMaintenanceUI {
                 case 1 -> menuBlockForChosenFacility(availableTimeslot, adminId, adminName);
                 case 2 -> menuUnblockForChosenFacility(availableTimeslot);
                 case 3 -> menuDeleteForChosenFacility(availableTimeslot);
-                case 0 -> managing = false;
+                case 0 -> browsing = false;
             }
         }
     }
@@ -396,37 +325,24 @@ public class TimeslotMaintenanceUI {
     // -----------------------------------------
 
     private void menuBlock(SortedArrayList<Facility> facilityList, String adminId, String adminName) {
-        System.out.println("--- Block Slots ---");
+        if (facilityList == null || facilityList.isEmpty()) {
+            System.out.println("\nNo facility found");
+            return;
+        }
+                    
+        System.out.println("\n--- Block Slots ---");
         System.out.println("Block by:");
         System.out.println("1. By Facility Name for a Day");
         System.out.println("2. By Room Type for a Day");
         System.out.println("3. Individual Room for a Day");
         System.out.println("0. Back");
 
-        int facilityScope = readInt("Select scope: ", 0, 4);
+        int facilityScope = readInt("Select scope: ", 0, 3);
         if (facilityScope == 0) return;
         
-        LocalDate date = null;
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
+        LocalDate date = readDate();
         
-        System.out.println("Choose a date (today/tomorrow):");
-        System.out.println("1. " + today.format(DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
-        System.out.println("0. Back");
-        
-        int dateSelection = readInt("Select date: ", 0, 2);
-        if (dateSelection == 0) return;
-        
-        if (dateSelection == 1) {
-            date = today;
-        }
-        
-        else if (dateSelection == 2) {
-            date = tomorrow;
-        }
-        
-        SortedArrayList<Facility> targetFacilityList;
+        SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
@@ -438,7 +354,7 @@ public class TimeslotMaintenanceUI {
                 
                 count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, adminId, adminName);
                 
-                System.out.println("Blocked " + count + " slot(s) for [" + facilityName + "] on " + date.format(DATE_FORMAT));
+                System.out.println("\nBlocked " + count + " slot(s) for [" + facilityName + "] on " + date.format(DATE_FORMAT));
             }
             
             case 2 -> {
@@ -449,7 +365,7 @@ public class TimeslotMaintenanceUI {
                 
                 count = timeslotMaintenance.blockMultipleTimeslotsForMultipleFacilities(targetFacilityList, date, adminId, adminName);
                 
-                System.out.println("Blocked " + count + " slot(s) for room type [" + roomType + "] on " + date.format(DATE_FORMAT));
+                System.out.println("\nBlocked " + count + " slot(s) for room type [" + roomType + "] on " + date.format(DATE_FORMAT));
             }
             
             case 3 -> {
@@ -458,7 +374,7 @@ public class TimeslotMaintenanceUI {
                 
                 count = timeslotMaintenance.blockMultipleTimeslotsForOneFacility(facility, date, adminId, adminName);
 
-                System.out.println("Blocked " + count + " slot(s) for Facility " + facility.getRoomName()+ " on " + date.format(DATE_FORMAT) + ".");
+                System.out.println("\nBlocked " + count + " slot(s) for Facility " + facility.getRoomName()+ " on " + date.format(DATE_FORMAT) + ".");
             }
         }
 
@@ -466,56 +382,48 @@ public class TimeslotMaintenanceUI {
     }
 
     private void menuBlockForChosenFacility(SortedArrayList<Timeslot> timeslotList, String adminId, String adminName) {
-        int timeslotSelection = readInt("  Select slot No. to block: ", 1, timeslotList.getNumberOfEntries());
+        if (timeslotList == null || timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found");
+            return;
+        }
+        
+        int timeslotSelection = readInt("Select slot No. to block: ", 1, timeslotList.getNumberOfEntries());
         Timeslot chosenTimeslot = timeslotList.getEntry(timeslotSelection);
 
         if (chosenTimeslot.isBlocked()) {
-            System.out.println("Slot is already BLOCKED");
+            System.out.println("\nSlot is already BLOCKED");
             return;
         }
         
         boolean status = timeslotMaintenance.blockOneTimeslot(chosenTimeslot.getTimeslotId(), adminId, adminName);
 
         if (status) {
-            System.out.println("Slot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " blocked successfully");
+            System.out.println("\nSlot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " blocked successfully");
         }
         else {
-            System.out.println("Failed to block slot");
+            System.out.println("\nFailed to block slot");
         }
     }
     
-    private void menuUnblock(SortedArrayList<Facility> facilityList) {        
-        System.out.println("--- Unblock Slots ---");
+    private void menuUnblock(SortedArrayList<Facility> facilityList) {
+        if (facilityList == null || facilityList.isEmpty()) {
+            System.out.println("\nNo facility found");
+            return;
+        }
+                
+        System.out.println("\n--- Unblock Slots ---");
         System.out.println("Unblock by:");
         System.out.println("1. By Facility Name for a Day");
         System.out.println("2. By Room Type for a Day");
         System.out.println("3. Individual Room for a Day");
         System.out.println("0. Back");
 
-        int facilityScope = readInt("Select scope: ", 0, 4);
+        int facilityScope = readInt("Select scope: ", 0, 3);
         if (facilityScope == 0) return;
         
-        LocalDate date = null;
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
-        
-        System.out.println("Choose a date (today/tomorrow):");
-        System.out.println("1. " + today.format(DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
-        System.out.println("0. Back");
-        
-        int dateSelection = readInt("Select date: ", 0, 2);
-        if (dateSelection == 0) return;
-        
-        if (dateSelection == 1) {
-            date = today;
-        }
-        
-        else if (dateSelection == 2) {
-            date = tomorrow;
-        }
+        LocalDate date = readDate();
 
-        SortedArrayList<Facility> targetFacilityList;
+        SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
@@ -555,21 +463,26 @@ public class TimeslotMaintenanceUI {
     }
     
     private void menuUnblockForChosenFacility(SortedArrayList<Timeslot> timeslotList) {
-        int timeslotSelection = readInt("  Select slot No. to unblock: ", 1, timeslotList.getNumberOfEntries());
+        if (timeslotList == null || timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found");
+            return;
+        }
+                
+        int timeslotSelection = readInt("Select slot No. to unblock: ", 1, timeslotList.getNumberOfEntries());
         Timeslot chosenTimeslot = timeslotList.getEntry(timeslotSelection);
 
         if (!chosenTimeslot.isBlocked()) {
-            System.out.println("Slot is not BLOCKED");
+            System.out.println("\nSlot is not BLOCKED");
             return;
         }
 
         boolean status = timeslotMaintenance.unblockOneTimeslot(chosenTimeslot.getTimeslotId());
 
         if (status) {
-            System.out.println("Slot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " unblocked successfully");
+            System.out.println("\nSlot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " unblocked successfully");
         }
         else {
-            System.out.println("Failed to unblock slot");
+            System.out.println("\nFailed to unblock slot");
         }
     }
     
@@ -577,46 +490,25 @@ public class TimeslotMaintenanceUI {
     // DELETE
     // -----------------------------------------
     
-    private void menuDelete(SortedArrayList<Facility> facilityList) {        
-        System.out.println("--- Delete AVAILABLE Slots ---");
+    private void menuDelete(SortedArrayList<Facility> facilityList) {
+        if (facilityList == null || facilityList.isEmpty()) {
+            System.out.println("\nNo facility found");
+            return;
+        }
+                
+        System.out.println("\n--- Delete AVAILABLE Slots ---");
         System.out.println("Delete by:");
         System.out.println("1. By Facility Name for a Day");
         System.out.println("2. By Room Type for a Day");
         System.out.println("3. Individual Room for a Day");
         System.out.println("0. Back");
 
-        int facilityScope = readInt("Select scope: ", 0, 4);
+        int facilityScope = readInt("Select scope: ", 0, 3);
         if (facilityScope == 0) return;
         
-        LocalDate date = null;
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
+        LocalDate date = readDate();
         
-        System.out.println("Choose a date (today/tomorrow):");
-        System.out.println("1. " + today.format(DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
-        System.out.println("0. Back");
-        
-        int dateSelection = readInt("Select date: ", 0, 2);
-        if (dateSelection == 0) return;
-        
-        if (dateSelection == 1) {
-            date = today;
-        }
-        
-        else if (dateSelection == 2) {
-            date = tomorrow;
-        }
-        
-        System.out.print("Confirm delete? (Y/N): ");
-        String confirm = scanner.nextLine().trim();
-
-        if (!confirm.equalsIgnoreCase("Y")) {
-            System.out.println("Deletion cancelled");
-            return;
-        }
-
-        SortedArrayList<Facility> targetFacilityList;
+        SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
@@ -656,34 +548,31 @@ public class TimeslotMaintenanceUI {
     }
     
     private void menuDeleteForChosenFacility(SortedArrayList<Timeslot> timeslotList) {
-        int timeslotSelection = readInt("  Select slot No. to delete: ", 1, timeslotList.getNumberOfEntries());
+        if (timeslotList == null || timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found");
+            return;
+        }
+                
+        int timeslotSelection = readInt("Select slot No. to delete: ", 1, timeslotList.getNumberOfEntries());
         Timeslot chosenTimeslot = timeslotList.getEntry(timeslotSelection);
 
         if (chosenTimeslot.isBooked()) {
-            System.out.println("Cannot delete a BOOKED slot. Cancel the booking first");
+            System.out.println("\nCannot delete a BOOKED slot. Cancel the booking first");
             return;
         }
         
         if (chosenTimeslot.isBlocked()) {
-            System.out.println("Cannot delete a BLOCKED slot. Unblock the booking first");
-            return;
-        }
-
-        System.out.print("Confirm delete? (Y/N): ");
-        String confirm = scanner.nextLine().trim();
-
-        if (!confirm.equalsIgnoreCase("Y")) {
-            System.out.println("Deletion cancelled");
+            System.out.println("\nCannot delete a BLOCKED slot. Unblock the booking first");
             return;
         }
 
         boolean status = timeslotMaintenance.deleteOneTimeslot(chosenTimeslot.getTimeslotId());
 
         if (status) {
-            System.out.println("Slot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " deleted successfully");
+            System.out.println("\nSlot " + chosenTimeslot.getStartTime().format(TIME_FORMAT) + " deleted successfully");
         }
         else {
-            System.out.println("Failed to delete slot");
+            System.out.println("\nFailed to delete slot");
         }
     }
 
@@ -692,20 +581,25 @@ public class TimeslotMaintenanceUI {
     // -----------------------------------------
     
     private void printSlotTable(SortedArrayList<Timeslot> timeslotList, String title, LocalDate date) {
-        System.out.println("--- " + title + " ---");
-        System.out.println("Legend:  --=Available   /=Booked   X=Blocked");
+        System.out.println();
+        printDivider("-", calcTableWidth());
+        System.out.println(title);
+        System.out.println("Legend:   --=Available    /=Booked    X=Blocked");
 
-        System.out.printf("%-" + COLUMN_INDEX + "s | %-" + COLUMN_WIDTH_ROOM_NAME + "s", "No.", "Room Name");
+        System.out.printf("%-" + COLUMN_INDEX + "s | %-" + COLUMN_WIDTH_ROOM_NAME + "s | %-" + COLUMN_WIDTH_ROOM_TYPE + "s", "No.", "Room Name", "Room Type");
         
-        for (LocalTime mark : TIME_MARKS) {
-            System.out.printf(" | %-" + COLUMN_WIDTH_START_TIME + "s", mark.format(TIME_FORMAT));
+        for (int i = 1; i <= TIME_MARKS.getNumberOfEntries(); i++) {
+            LocalTime mark = TIME_MARKS.getEntry(i);
+            System.out.printf(" | %-" + COLUMN_WIDTH_START_TIME + "s", mark.format(TIME_FORMAT) + " - " + mark.plusMinutes(Timeslot.MINUTES_PER_BLOCK));
         }
+        
         System.out.println();
         printDivider("-", calcTableWidth());
 
-        if (timeslotList.isEmpty()) {
+        if (timeslotList == null || timeslotList.isEmpty()) {
             System.out.println("(No slots found)");
             printDivider("=", calcTableWidth());
+            
             return;
         }
 
@@ -726,10 +620,16 @@ public class TimeslotMaintenanceUI {
         while (facilityIterator.hasNext()) {
             Facility facility = facilityIterator.next();
 
-            System.out.printf("%-" + COLUMN_INDEX + "d | %-" + COLUMN_WIDTH_ROOM_NAME + "s", rowNum++, truncate(facility.getRoomName(), COLUMN_WIDTH_ROOM_NAME));
-
-            for (LocalTime mark : TIME_MARKS) {
+            System.out.printf("%-" + COLUMN_INDEX + "d | %-" + COLUMN_WIDTH_ROOM_NAME + "s | %-" + COLUMN_WIDTH_ROOM_TYPE + "s", rowNum++, facility.getRoomName(), facility.getRoomType());
+            
+            for (int i = 1; i <= TIME_MARKS.getNumberOfEntries(); i++) {
+                LocalTime mark = TIME_MARKS.getEntry(i);
                 Timeslot timeslot = findSlot(facility, date, mark);
+                
+                if (timeslot == null) {
+                    continue;
+                }
+                
                 String cell = buildCell(timeslot);
                 System.out.printf(" | %-" + COLUMN_WIDTH_START_TIME + "s", cell);
             }
@@ -743,13 +643,18 @@ public class TimeslotMaintenanceUI {
     }
 
     private Timeslot findSlot(Facility facility, LocalDate date, LocalTime startTime) {
-        SortedArrayList<Timeslot> timeslotList = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
-        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
+
+        if (availableTimeslot == null || availableTimeslot.isEmpty()) {
+            return null;
+        }
+            
+        Iterator<Timeslot> iterator = availableTimeslot.getIterator();
         
         while (iterator.hasNext()) {
             Timeslot timeslot = iterator.next();
             
-            if (timeslot.getStartTime().equals(startTime)) {
+        if (timeslot.getStartTime().equals(startTime)) {
                 return timeslot;
             }
         }
@@ -758,14 +663,14 @@ public class TimeslotMaintenanceUI {
     }
     
     private String buildCell(Timeslot timeslot) {
-        if (timeslot == null) return "  -  ";
-        if (timeslot.isBlocked()) return "  X  ";
-        if (timeslot.isBooked()) return "  /  ";
-        return "  -- ";
+        if (timeslot == null) return "     ---     ";
+        if (timeslot.isBlocked()) return "      X      ";
+        if (timeslot.isBooked()) return "      /      ";
+        return "      -      ";
     }
 
     private int calcTableWidth() {
-        return COLUMN_INDEX + 3 + COLUMN_WIDTH_ROOM_NAME + (TIME_MARKS.length * (COLUMN_WIDTH_START_TIME + 3));
+        return COLUMN_INDEX + 3 + COLUMN_WIDTH_ROOM_NAME + 3 + COLUMN_WIDTH_ROOM_TYPE + (TIME_MARKS.getNumberOfEntries() * (COLUMN_WIDTH_START_TIME + 3));
     }
 
     // -----------------------------------------
@@ -780,15 +685,15 @@ public class TimeslotMaintenanceUI {
             try {
                 int value = Integer.parseInt(line);
                 if (value >= min && value <= max) return value;
-                System.out.println("Please enter a number between " + min + " and " + max);
+                System.out.println("\nPlease enter a number between " + min + " and " + max);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number");
+                System.out.println("\nInvalid input. Please enter a number");
             }
         }
     }
 
     private Facility readFacility(SortedArrayList<Facility> facilityList) {
-        System.out.println("Available facilities:");
+        System.out.println("\nAvailable facilities:");
         
         for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
             Facility facility = facilityList.getEntry(i);
@@ -851,6 +756,20 @@ public class TimeslotMaintenanceUI {
         return roomTypeList.getEntry(choice);
     }
     
+    private LocalDate readDate() {
+        LocalDate today    = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        
+        System.out.println("\nChoose a date:");
+        System.out.println("1. " + today.format(DATE_FORMAT));
+        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
+        System.out.println("0. Back");
+        
+        int sel = readInt("Select date: ", 0, 2);
+        if (sel == 0) return null;
+        return sel == 1 ? today : tomorrow;
+    }
+    
     // -----------------------------------------
     // OUTPUT UTILITY
     // -----------------------------------------
@@ -862,11 +781,5 @@ public class TimeslotMaintenanceUI {
     private void pause() {
         System.out.print("\nPress Enter to continue...");
         scanner.nextLine();
-    }
-
-    // Truncates a string to facilityIterator within a column width
-    private String truncate(String string, int maxLength) {
-        if (string == null) return "";
-        return string.length() <= maxLength ? string : string.substring(0, maxLength - 1) + "…";
     }
 }

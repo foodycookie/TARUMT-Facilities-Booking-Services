@@ -14,7 +14,7 @@ public class AdminMaintenance {
     private final AdminDAO adminDAO;
 
     public AdminMaintenance() {
-        adminDAO = new AdminDAO("admin.dat");
+        adminDAO = new AdminDAO("src/main/resources/admin.dat");
         adminList = adminDAO.retrieveFromFile();
     }
 

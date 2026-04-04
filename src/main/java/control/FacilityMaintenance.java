@@ -43,7 +43,7 @@ public class FacilityMaintenance {
     // ------------------------------------------------------------------ //
 
     /** Relative path to the binary data file for facilities. */
-    private static final String FACILITY_FILE = "data/facilities.dat";
+    private static final String FACILITY_FILE = "src/main/resources/facilities.dat";
 
     /** Prefix for Library Discussion Room and Individual Study Room. */
     public static final String PREFIX_LIBRARY = "L";

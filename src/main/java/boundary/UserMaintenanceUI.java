@@ -3,6 +3,7 @@ package boundary;
 import control.UserMaintenance;
 import entity.User;
 import java.util.Scanner;
+import utility.Validation;
 
 /**
  *
@@ -23,7 +24,7 @@ public class UserMaintenanceUI {
             System.out.println("4. Delete User");
             System.out.println("0. Exit");
             System.out.print("Enter choice: ");
-            choice = readInt();
+            choice = Validation.readInt();
 
             switch (choice) {
                 case 1 -> System.out.println(userMaintenance.displayAllUsers());
@@ -35,18 +36,6 @@ public class UserMaintenanceUI {
             }
         } while (choice != 0);
     }
-
-    private int readInt() {
-        while (!scanner.hasNextInt()) {
-            System.out.print("Invalid input. Enter a number: ");
-            scanner.nextLine();
-        }
-
-        int value = scanner.nextInt();
-        scanner.nextLine(); // clear buffer
-        return value; 
-    }
-
 
     private void addUser() {
         int choice;
@@ -63,7 +52,7 @@ public class UserMaintenanceUI {
                 System.out.println("1. Student");
                 System.out.println("2. Staff");
                 System.out.print("Choose role: ");
-                roleChoice = readInt();
+                roleChoice = Validation.readInt();
 
                 if (roleChoice != 1 && roleChoice != 2) {
                     System.out.println("Invalid choice. Please enter 1 or 2 only.");
@@ -84,13 +73,13 @@ public class UserMaintenanceUI {
             roleId = scanner.nextLine().trim();
             
             if (role.equals("Student")) {
-                if (!userMaintenance.isValidStudentId(roleId)) {
+                if (!Validation.isValidStudentId(roleId)) {
                     System.out.println("Invalid Student ID format " + roleExp);
                     choice = 2;
                     continue;
                 }
             } else {
-                if (!userMaintenance.isValidStaffId(roleId)) {
+                if (!Validation.isValidStaffId(roleId)) {
                     System.out.println("Invalid Staff ID format " + roleExp);
                     choice = 2;
                     continue;
@@ -106,7 +95,7 @@ public class UserMaintenanceUI {
             System.out.print("Enter Name: ");
             userName = scanner.nextLine().trim();
 
-            if (!userMaintenance.isValidUserName(userName)) {
+            if (!Validation.isValidUserName(userName)) {
                 System.out.println("Name cannot be empty.");
                 choice = 2;
                 continue;
@@ -122,7 +111,7 @@ public class UserMaintenanceUI {
             System.out.println("2. Re-enter Details");
             System.out.println("3. Cancel");
             System.out.print("Enter choice: ");
-            choice = readInt();
+            choice = Validation.readInt();
 
             switch (choice) {
                 case 1 -> {
@@ -136,7 +125,7 @@ public class UserMaintenanceUI {
                             System.out.println("\n1. Add Another User");
                             System.out.println("2. Back");
                             System.out.print("Enter choice: ");
-                            nextChoice = readInt();
+                            nextChoice = Validation.readInt();
 
                             if (nextChoice != 1 && nextChoice != 2) {
                                 System.out.println("Invalid choice. Please enter 1 or 2 only.");
@@ -184,7 +173,7 @@ public class UserMaintenanceUI {
         System.out.println("\n1. Confirm Delete");
         System.out.println("2. Cancel");
         System.out.print("Enter choice: ");
-        int choice = readInt();
+        int choice = Validation.readInt();
 
         if (choice == 1) {
             boolean deleted = userMaintenance.deleteUser(userId);
@@ -223,12 +212,12 @@ public class UserMaintenanceUI {
             newRoleId = existingUser.getRoleId();
         } else {
             if (newRole.equalsIgnoreCase("Student")) {
-                if (!userMaintenance.isValidStudentId(newRoleId)) {
+                if (!Validation.isValidStudentId(newRoleId)) {
                     System.out.println("Invalid Student ID format.");
                     return;
                 }
             } else {
-                if (!userMaintenance.isValidStaffId(newRoleId)) {
+                if (!Validation.isValidStaffId(newRoleId)) {
                     System.out.println("Invalid Staff ID format.");
                     return;
                 }
@@ -257,7 +246,7 @@ public class UserMaintenanceUI {
         System.out.println("1. Confirm Update");
         System.out.println("2. Cancel");
         System.out.print("Enter choice: ");
-        int choice = readInt();
+        int choice = Validation.readInt();
 
         if (choice == 1) {
             boolean updated = userMaintenance.updateUser(userId, newRoleId, newUserName, newRole);

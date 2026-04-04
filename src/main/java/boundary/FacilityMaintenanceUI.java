@@ -99,7 +99,7 @@ public class FacilityMaintenanceUI {
         "Discussion Room (1 PC)",
         "Discussion Room with Projector (2 PCs)",
         "Individual Study Room",
-        "Seminar Room",
+        "Presentation Room",
         "Other (enter manually)"
     };
 
@@ -111,6 +111,8 @@ public class FacilityMaintenanceUI {
         "Pickleball Court",
         "Badminton Court",
         "Basketball Court",
+        "Vollleyball Court",
+        "Swimming Pool",
         "Other (enter manually)"
     };
 
@@ -313,6 +315,7 @@ public class FacilityMaintenanceUI {
      *   <li>By exact facility ID (e.g. {@code L001}, {@code C002}).</li>
      * </ol>
      */
+    
     private void searchFacility() {
         printSectionHeader("SEARCH FACILITY");
         System.out.println("  1. Search by Facility Name");

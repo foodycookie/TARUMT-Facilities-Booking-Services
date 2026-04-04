@@ -7,39 +7,37 @@ import entity.Timeslot;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Iterator;
-import static utility.SortedListHelper.compareStringIfExceedTarget;
-
+import utility.SortedListHelper;
 public class TimeslotMaintenance {
-    public static final int MAX_CONSECUTIVE_BLOCKS = 4;
-    private SortedArrayList<Timeslot> timeslotList;
+    public static final int MAX_CONSECUTIVE_BLOCKS = 2;
+    private SortedArrayList<Timeslot> timeslotListDB;
     private TimeslotDAO timeslotDAO;
     
     public TimeslotMaintenance() {
         timeslotDAO = new TimeslotDAO("timeslot.dat");
-        timeslotList = timeslotDAO.retrieveFromFile();
+        timeslotListDB = timeslotDAO.retrieveFromFile();
     }
     
     // -----------------------------------------
     // CREATE
     // -----------------------------------------
 
-    public int generateDaySlotsForOneFacility(String facilityId, LocalDate date) {
+    public int generateDaySlotsForOneFacility(Facility facility, LocalDate date) {
         int addedSlot = 0;
         LocalTime cursor = Timeslot.DAY_START;
 
         while (cursor.isBefore(Timeslot.DAY_END)) {
-            Timeslot timeslot = new Timeslot(facilityId, date, cursor);
+            Timeslot timeslot = new Timeslot(facility, date, cursor);
 
-            // Only add if this exact slot doesn't already exist
-            if (!timeslotList.contains(timeslot)) {
-                timeslotList.add(timeslot);
+            if (!timeslotListDB.contains(timeslot)) {
+                timeslotListDB.add(timeslot);
                 addedSlot++;
             }
 
             cursor = cursor.plusMinutes(Timeslot.MINUTES_PER_BLOCK);
         }
 
-        timeslotDAO.saveToFile(timeslotList);
+        timeslotDAO.saveToFile(timeslotListDB);
         
         return addedSlot;
     }
@@ -51,7 +49,7 @@ public class TimeslotMaintenance {
         while (iterator.hasNext()) {
             Facility facility = iterator.next();
                         
-            addedSlot += generateDaySlotsForOneFacility(facility.getFacilityId(), date);
+            addedSlot += generateDaySlotsForOneFacility(facility, date);
         }
 
         return addedSlot;
@@ -60,9 +58,29 @@ public class TimeslotMaintenance {
     // -----------------------------------------
     // READ
     // -----------------------------------------
+    
+    public SortedArrayList<Timeslot> getTimeslotsForOneFacility(Facility facility, LocalDate date) {
+        SortedArrayList<Timeslot> result = new SortedArrayList<>();
+        
+        Timeslot probe = new Timeslot(facility, date, Timeslot.DAY_START);
+        int startPosition = SortedListHelper.findStartPosition(timeslotListDB, probe);
 
-    public SortedArrayList<Timeslot> getTimeslots(SortedArrayList<Facility> facilityList, LocalDate date) {
+        for (int i = startPosition; i <= timeslotListDB.getNumberOfEntries(); i++) {
+            Timeslot timeslot = timeslotListDB.getEntry(i);
+            
+            if (SortedListHelper.isPastTargetDateAndRoomName(timeslot, facility, date)) break;
+            
+            if (timeslot.getFacility().getFacilityId().equals(facility.getFacilityId())) {
+                result.add(timeslot);
+            }
+        }
+        
+        return result;
+    }
+    
+    public SortedArrayList<Timeslot> getTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date) {
         SortedArrayList<String> matchingFacilityIdList = new SortedArrayList<>();
+        
         Iterator<Facility> facilityIterator = facilityList.getIterator();
 
         while (facilityIterator.hasNext()) {
@@ -70,26 +88,19 @@ public class TimeslotMaintenance {
             
             matchingFacilityIdList.add(facility.getFacilityId());
         }
-
-        SortedArrayList<Timeslot> result = new SortedArrayList<>();
-        Iterator<Timeslot> timeslotIterator = timeslotList.getIterator();
         
-        // This is a sorted list
-        // If the list stop adding something after adding something, means nothing will match after it, can exit early
-        boolean trigger = false;
+        SortedArrayList<Timeslot> result = new SortedArrayList<>();
 
-        while (timeslotIterator.hasNext()) {
-            Timeslot timeslot = timeslotIterator.next();
+        Timeslot probe = new Timeslot(facilityList.getEntry(1), date, Timeslot.DAY_START);
+        int startPosition = SortedListHelper.findStartPosition(timeslotListDB, probe);
 
-            if (matchingFacilityIdList.contains(timeslot.getFacilityId()) && timeslot.getDate().isEqual(date)) {
+        for (int i = startPosition; i <= timeslotListDB.getNumberOfEntries(); i++) {
+            Timeslot timeslot = timeslotListDB.getEntry(i);
+
+            if (SortedListHelper.isPastTargetDate(timeslot, date)) break;
+
+            if (timeslot.getDate().isEqual(date) && matchingFacilityIdList.contains(timeslot.getFacility().getFacilityId())) {
                 result.add(timeslot);
-                trigger = true;
-            }
-            
-            else {
-                if (trigger) {
-                    break;
-                }
             }
         }
 
@@ -97,7 +108,7 @@ public class TimeslotMaintenance {
     }
     
     public Timeslot findTimeslotById(String timeslotId) {
-        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        Iterator<Timeslot> iterator = timeslotListDB.getIterator();
 
         while (iterator.hasNext()) {
             Timeslot timeslot = iterator.next();
@@ -105,17 +116,13 @@ public class TimeslotMaintenance {
             if (timeslot.getTimeslotId().equals(timeslotId)) {
                 return timeslot;
             }
-            
-            if (compareStringIfExceedTarget(timeslot.getTimeslotId(), timeslotId)) {
-                return null;
-            }
         }
 
         return null;
     }
 
     public int getTotalSlotCount() {
-        return timeslotList.getNumberOfEntries();
+        return timeslotListDB.getNumberOfEntries();
     }
 
     // -----------------------------------------
@@ -132,12 +139,49 @@ public class TimeslotMaintenance {
         boolean success = timeslot.block(userId);
         
         if (success) {
-            timeslotDAO.saveToFile(timeslotList);
+            timeslotDAO.saveToFile(timeslotListDB);
         }
         
         return success;
     }
-
+    
+    public int blockMultipleTimeslotsForOneFacility(Facility facility, LocalDate date, String userId) {
+        int count = 0;
+        
+        SortedArrayList<Timeslot> timeslotList = getTimeslotsForOneFacility(facility, date);
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        
+        while (iterator.hasNext()) {
+            if (iterator.next().block(userId)) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+        
+        return count;
+    }
+    
+    public int blockMultipleTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date, String userId) {
+        int count = 0;
+        SortedArrayList<Timeslot> timeslotList = getTimeslotsForMultipleFacilities(facilityList, date);
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        
+        while (iterator.hasNext()) {
+            if (iterator.next().block(userId)) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+        
+        return count;
+    }
+    
     public boolean unblockOneTimeslot(String timeslotId) {
         Timeslot timeslot = findTimeslotById(timeslotId);
         
@@ -148,33 +192,15 @@ public class TimeslotMaintenance {
         boolean success = timeslot.unblock();
         
         if (success) {
-            timeslotDAO.saveToFile(timeslotList);
+            timeslotDAO.saveToFile(timeslotListDB);
         }
         
         return success;
     }
     
-    public int blockMultipleTimeslots(SortedArrayList<Facility> facilityList, LocalDate date, String userId) {
+    public int unblockMultipleTimeslotsForOneFacility(Facility facility, LocalDate date) {
         int count = 0;
-        SortedArrayList<Timeslot> timeslotList = getTimeslots(facilityList, date);
-        Iterator<Timeslot> iterator = timeslotList.getIterator();
-        
-        while (iterator.hasNext()) {
-            if (iterator.next().block(userId)) {
-                count++;
-            }
-        }
-        
-        if (count > 0) {
-            timeslotDAO.saveToFile(timeslotList);
-        }
-        
-        return count;
-    }
-    
-    public int unblockMultipleTimeslots(SortedArrayList<Facility> facilityList, LocalDate date) {
-        int count = 0;
-        SortedArrayList<Timeslot> timeslotList = getTimeslots(facilityList, date);
+        SortedArrayList<Timeslot> timeslotList = getTimeslotsForOneFacility(facility, date);
         Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
@@ -184,7 +210,25 @@ public class TimeslotMaintenance {
         }
         
         if (count > 0) {
-            timeslotDAO.saveToFile(timeslotList);
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+        
+        return count;
+    }
+    
+    public int unblockMultipleTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date) {
+        int count = 0;
+        SortedArrayList<Timeslot> timeslotList = getTimeslotsForMultipleFacilities(facilityList, date);
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        
+        while (iterator.hasNext()) {
+            if (iterator.next().unblock()) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            timeslotDAO.saveToFile(timeslotListDB);
         }
         
         return count;
@@ -193,82 +237,63 @@ public class TimeslotMaintenance {
     // -----------------------------------------
     // DELETE
     // -----------------------------------------
-
-    public int deleteAvailableTimeslotsForOneFacility(String facilityId, LocalDate date) {
-        SortedArrayList<Timeslot> timeslotListToRemove = new SortedArrayList<>();
-        Iterator<Timeslot> iterator = timeslotList.getIterator();
-        
-        boolean trigger = false;
-
-        while (iterator.hasNext()) {
-            Timeslot timeslot = iterator.next();
-            
-            if (timeslot.getFacilityId().equals(facilityId) && timeslot.getDate().equals(date) && timeslot.isAvailable()) {
-                timeslotListToRemove.add(timeslot);
-                trigger = true;
-            }
-            
-            else {
-                if (trigger) {
-                    break;
-                }
-            }
-        }
-        
-        return removeTimeslotList(timeslotListToRemove);
-    }
     
-    public int deleteAvailableTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date) {
-        SortedArrayList<String> matchingFacilityIdList = new SortedArrayList<>();
-        Iterator<Facility> facilityIterator = facilityList.getIterator();
+    public boolean deleteOneTimeslot(String timeslotId) {
+        Timeslot timeslot = findTimeslotById(timeslotId);
         
-        while (facilityIterator.hasNext()) {
-            Facility facility = facilityIterator.next();
-            
-            matchingFacilityIdList.add(facility.getFacilityId());
-        }
-        
-        SortedArrayList<Timeslot> timeslotListToRemove = new SortedArrayList<>();
-        Iterator<Timeslot> timeslotIterator = timeslotList.getIterator();
-        
-        boolean trigger = false;
-
-        while (timeslotIterator.hasNext()) {
-            Timeslot timeslot = timeslotIterator.next();
-
-            if (matchingFacilityIdList.contains(timeslot.getFacilityId()) && timeslot.getDate().isEqual(date)) {
-                timeslotListToRemove.add(timeslot);
-                trigger = true;
-            }
-            
-            else {
-                if (trigger) {
-                    break;
-                }
-            }
+        if (timeslot == null || !timeslot.isAvailable()) {
+            return false;
         }
 
-        return removeTimeslotList(timeslotListToRemove);
+        boolean success = timeslotListDB.remove(timeslot);
+        
+        if (success) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+        
+        return success;
     }
-    
-    private int removeTimeslotList(SortedArrayList<Timeslot> timeslotListToRemove) {
+
+    public int deleteAvailableTimeslotsForOneFacility(Facility facility, LocalDate date) {
         int count = 0;
+        SortedArrayList<Timeslot> timeslotListToRemove = getTimeslotsForOneFacility(facility, date);
         Iterator<Timeslot> iterator = timeslotListToRemove.getIterator();
         
         while (iterator.hasNext()) {
-            if (timeslotList.remove(iterator.next())) {
+            Timeslot timeslot = iterator.next();
+            
+            if (timeslot.isAvailable() && timeslotListDB.remove(timeslot)) {
                 count++;
             }
         }
         
         if (count > 0) {
-            timeslotDAO.saveToFile(timeslotList);
+            timeslotDAO.saveToFile(timeslotListDB);
         }
         
         return count;
     }
- 
-    // I didnt do this part
+    
+    public int deleteAvailableTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date) {
+        int count = 0;
+        SortedArrayList<Timeslot> timeslotList = getTimeslotsForMultipleFacilities(facilityList, date);
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
+        
+        while (iterator.hasNext()) {
+            Timeslot timeslot = iterator.next();
+            
+            if (timeslot.isAvailable() && timeslotListDB.remove(timeslot)) {
+                count++;
+            }
+        }
+        
+        if (count > 0) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+        
+        return count;
+    }
+    
     // =========================================================================
     // BOOKING VALIDATION — used by BookingMaintenance (control-to-control)
     // =========================================================================
@@ -281,7 +306,7 @@ public class TimeslotMaintenance {
      * @param startTime   Start of the first block.
      * @param blockCount  Number of consecutive 30-min blocks (1–4).
      * @return true if all requested blocks are AVAILABLE.
-     */
+
     public boolean areConsecutiveSlotsAvailable(int facilityId, LocalDate date,
                                                  LocalTime startTime, int blockCount) {
         if (blockCount < 1 || blockCount > MAX_CONSECUTIVE_BLOCKS) return false;
@@ -298,13 +323,14 @@ public class TimeslotMaintenance {
 
         return true;
     }
+    */
 
     /**
      * Books a consecutive range of slots atomically.
      * Only proceeds if ALL slots in the range are available (collision check).
      *
      * @return true if all slots were successfully booked.
-     */
+     
     public boolean bookConsecutiveSlots(int facilityId, LocalDate date,
                                          LocalTime startTime, int blockCount,
                                          String userId, String bookingId) {
@@ -323,12 +349,13 @@ public class TimeslotMaintenance {
         saveToFile();
         return true;
     }
+    */
 
     /**
      * Releases all slots associated with a bookingId (for cancellation).
      *
      * @return Number of slots released.
-     */
+     
     public int releaseSlotsByBookingId(String bookingId) {
         int count = 0;
         Iterator<Timeslot> it = timeslotList.getIterator();
@@ -344,4 +371,5 @@ public class TimeslotMaintenance {
         if (count > 0) saveToFile();
         return count;
     }
+    */
 }

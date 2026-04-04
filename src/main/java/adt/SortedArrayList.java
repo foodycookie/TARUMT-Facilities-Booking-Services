@@ -139,6 +139,7 @@ public class SortedArrayList<T extends Comparable<T>> implements SortedListInter
         }
     }
     
+    @Override
     public String toString() {
         String output = "List Content (Size: " + numberOfEntries + "):\n";
 

@@ -3,7 +3,6 @@ package control;
 import adt.SortedArrayList;
 import dao.FacilityDAO;
 import entity.Facility;
-import static utility.SortedListHelper.compareStringIfExceedTarget;
 
 /**
  * Business-logic layer for the Facility module.
@@ -149,13 +148,6 @@ public class FacilityMaintenance {
         for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
             Facility f = facilityList.getEntry(i);
             if (f == null) continue;
-
-            // Early exit: list is sorted by facilityName — once the current
-            // entry's name exceeds the target, no further matches are possible.
-            if (compareStringIfExceedTarget(f.getFacilityName(), facilityName)) {
-                break;
-            }
-
             if (f.getFacilityName().equalsIgnoreCase(facilityName)) {
                 results.add(f);
             }

@@ -11,8 +11,8 @@ import java.time.format.DateTimeFormatter;
 
 public class Timeslot implements Comparable<Timeslot>, Serializable {
     public static final LocalTime DAY_START = LocalTime.of(9, 0);
-    public static final LocalTime DAY_END = LocalTime.of(19, 30);
-    public static final int MINUTES_PER_BLOCK = 30;
+    public static final LocalTime DAY_END = LocalTime.of(19, 0);
+    public static final int MINUTES_PER_BLOCK = 60;
     
     public enum Status {
         AVAILABLE,
@@ -21,7 +21,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
     }
 
     private String timeslotId;
-    private String facilityId;
+    private Facility facility;
     private LocalDate date;
     private LocalTime startTime;
     // startTime + 30 minutes
@@ -30,9 +30,9 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
     private String bookedBy;
     private String bookingId;
 
-    public Timeslot(String facilityId, LocalDate date, LocalTime startTime) {
-        this.timeslotId = generateTimeslotId(facilityId, date, startTime);
-        this.facilityId = facilityId;
+    public Timeslot(Facility facility, LocalDate date, LocalTime startTime) {
+        this.timeslotId = generateTimeslotId(facility.getFacilityId(), date, startTime);
+        this.facility = facility;
         this.date = date;
         this.startTime = startTime;
         this.endTime = startTime.plusMinutes(MINUTES_PER_BLOCK);
@@ -45,12 +45,12 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         return timeslotId;
     }
 
-    public String getFacilityId() {
-        return facilityId;
+    public Facility getFacility() {
+        return facility;
     }
 
-    public void setFacilityId(String facilityId) { 
-        this.facilityId = facilityId;
+    public void setFacilityId(Facility facility) { 
+        this.facility = facility;
     }
 
     public LocalDate getDate() {
@@ -68,7 +68,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
     public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
         this.endTime = startTime.plusMinutes(MINUTES_PER_BLOCK);
-        this.timeslotId = generateTimeslotId(this.facilityId, this.date, startTime);
+        this.timeslotId = generateTimeslotId(this.facility.getFacilityId(), this.date, startTime);
     }
 
     public LocalTime getEndTime() {
@@ -162,8 +162,18 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         if (result != 0) {
             return result;
         }
+        
+        result = this.facility.getFacilityName().compareTo(other.facility.getFacilityName());
+        if (result != 0) {
+            return result;
+        }
+        
+        result = this.facility.getRoomType().compareTo(other.facility.getRoomType());
+        if (result != 0) {
+            return result;
+        }
 
-        result = this.facilityId.compareTo(other.facilityId);
+        result = this.facility.getRoomName().compareTo(other.facility.getRoomName());
         if (result != 0) {
             return result;
         }
@@ -186,7 +196,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         return this.timeslotId.equals(other.timeslotId);
     }
     
-    // For debug, table UI in boundary
+    // Not for display
     @Override
     public String toString() {
         DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
@@ -194,7 +204,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         
         return String.format("Timeslot[%s | %s | %s | %s–%s | %s | BookedBy: %s]",
             timeslotId,
-            facilityId,
+            facility.getFacilityId(),
             date.format(dateFormate),
             startTime.format(timeFormat),
             endTime.format(timeFormat),

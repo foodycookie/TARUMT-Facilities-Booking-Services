@@ -64,7 +64,7 @@ public class TimeslotMaintenanceUI {
     public void mainMenuForAdmin(SortedArrayList<Facility> facilityList, String adminId, String adminName) {
         boolean running = true;
 
-        while (running) {            
+        while (running) {
             System.out.println("\n--- Timeslot Management ---");
             System.out.println("1. View Slots");
             System.out.println("2. Generate Slots");
@@ -624,12 +624,7 @@ public class TimeslotMaintenanceUI {
             
             for (int i = 1; i <= TIME_MARKS.getNumberOfEntries(); i++) {
                 LocalTime mark = TIME_MARKS.getEntry(i);
-                Timeslot timeslot = findSlot(facility, date, mark);
-                
-                if (timeslot == null) {
-                    continue;
-                }
-                
+                Timeslot timeslot = findSlot(timeslotList, facility, mark);
                 String cell = buildCell(timeslot);
                 System.out.printf(" | %-" + COLUMN_WIDTH_START_TIME + "s", cell);
             }
@@ -642,19 +637,13 @@ public class TimeslotMaintenanceUI {
         printDivider("=", calcTableWidth());
     }
 
-    private Timeslot findSlot(Facility facility, LocalDate date, LocalTime startTime) {
-        SortedArrayList<Timeslot> availableTimeslot = timeslotMaintenance.getTimeslotsForOneFacility(facility, date);
-
-        if (availableTimeslot == null || availableTimeslot.isEmpty()) {
-            return null;
-        }
-            
-        Iterator<Timeslot> iterator = availableTimeslot.getIterator();
+    private Timeslot findSlot(SortedArrayList<Timeslot> timeslotList, Facility facility, LocalTime startTime) {
+        Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
             Timeslot timeslot = iterator.next();
             
-        if (timeslot.getStartTime().equals(startTime)) {
+            if (timeslot.getFacility().getFacilityId().equals(facility.getFacilityId()) && timeslot.getStartTime().equals(startTime)) {
                 return timeslot;
             }
         }

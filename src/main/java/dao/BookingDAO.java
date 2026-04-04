@@ -1,13 +1,13 @@
 package dao;
 
-import adt.SortedListInterface;
 import adt.SortedArrayList;
+import adt.SortedListInterface;
 import entity.Booking;
 import java.io.*;
 
 public class BookingDAO {
 
-    private String fileName = "bookings.dat";
+    private String fileName = "src/main/resources/bookings.dat";
 
     // SAVE TO FILE
     public void saveToFile(SortedListInterface<Booking> bookingList) {

@@ -15,7 +15,7 @@ public class UserMaintenance {
     public static User currentUser;
 
     public UserMaintenance() {
-        userDAO = new UserDAO("user.dat");
+        userDAO = new UserDAO("src/main/resources/user.dat");
         userList = userDAO.retrieveFromFile();
     }
 

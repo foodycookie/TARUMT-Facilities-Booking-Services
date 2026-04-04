@@ -306,7 +306,7 @@ public class TimeslotMaintenance {
      * @param startTime   Start of the first block.
      * @param blockCount  Number of consecutive 30-min blocks (1–4).
      * @return true if all requested blocks are AVAILABLE.
-
+*/
     public boolean areConsecutiveSlotsAvailable(int facilityId, LocalDate date,
                                                  LocalTime startTime, int blockCount) {
         if (blockCount < 1 || blockCount > MAX_CONSECUTIVE_BLOCKS) return false;
@@ -323,53 +323,53 @@ public class TimeslotMaintenance {
 
         return true;
     }
-    */
+    
 
     /**
      * Books a consecutive range of slots atomically.
      * Only proceeds if ALL slots in the range are available (collision check).
      *
      * @return true if all slots were successfully booked.
-     
-    public boolean bookConsecutiveSlots(int facilityId, LocalDate date,
-                                         LocalTime startTime, int blockCount,
-                                         String userId, String bookingId) {
-        if (!areConsecutiveSlotsAvailable(facilityId, date, startTime, blockCount)) {
-            return false;
-        }
-
-        LocalTime cursor = startTime;
-        for (int i = 0; i < blockCount; i++) {
-            String slotId = Timeslot.generateTimeslotId(String.valueOf(facilityId), date, cursor);
-            Timeslot slot = findTimeslotById(slotId);
-            slot.book(userId, bookingId);
-            cursor = cursor.plusMinutes(Timeslot.MINUTES_PER_BLOCK);
-        }
-
-        saveToFile();
-        return true;
-    }
-    */
-
-    /**
-     * Releases all slots associated with a bookingId (for cancellation).
-     *
-     * @return Number of slots released.
-     
-    public int releaseSlotsByBookingId(String bookingId) {
-        int count = 0;
-        Iterator<Timeslot> it = timeslotList.getIterator();
-
-        while (it.hasNext()) {
-            Timeslot slot = it.next();
-            if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
-                slot.cancel();
-                count++;
-            }
-        }
-
-        if (count > 0) saveToFile();
-        return count;
-    }
-    */
+     */
+//    public boolean bookConsecutiveSlots(int facilityId, LocalDate date,
+//                                         LocalTime startTime, int blockCount,
+//                                         String userId, String bookingId) {
+//        if (!areConsecutiveSlotsAvailable(facilityId, date, startTime, blockCount)) {
+//            return false;
+//        }
+//
+//        LocalTime cursor = startTime;
+//        for (int i = 0; i < blockCount; i++) {
+//            String slotId = Timeslot.generateTimeslotId(String.valueOf(facilityId), date, cursor);
+//            Timeslot slot = findTimeslotById(slotId);
+//            slot.book(bookingId, userId);
+//            cursor = cursor.plusMinutes(Timeslot.MINUTES_PER_BLOCK);
+//        }
+//
+//        saveToFile();
+//        return true;
+//    }
+//    
+//
+//    /**
+//     * Releases all slots associated with a bookingId (for cancellation).
+//     *
+//     * @return Number of slots released.
+//     */
+//    public int releaseSlotsByBookingId(String bookingId) {
+//        int count = 0;
+//        Iterator<Timeslot> it = timeslotList.getIterator();
+//
+//        while (it.hasNext()) {
+//            Timeslot slot = it.next();
+//            if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
+//                slot.cancel();
+//                count++;
+//            }
+//        }
+//
+//        if (count > 0) saveToFile();
+//        return count;
+//    }
+    
 }

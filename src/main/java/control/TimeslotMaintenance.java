@@ -129,14 +129,14 @@ public class TimeslotMaintenance {
     // UPDATE
     // -----------------------------------------
 
-    public boolean blockOneTimeslot(String timeslotId, String userId) {
+    public boolean blockOneTimeslot(String timeslotId, String adminId, String adminName) {
         Timeslot timeslot = findTimeslotById(timeslotId);
         
         if (timeslot == null) {
             return false;
         }
         
-        boolean success = timeslot.block(userId);
+        boolean success = timeslot.block(adminId, adminName);
         
         if (success) {
             timeslotDAO.saveToFile(timeslotListDB);
@@ -145,14 +145,14 @@ public class TimeslotMaintenance {
         return success;
     }
     
-    public int blockMultipleTimeslotsForOneFacility(Facility facility, LocalDate date, String userId) {
+    public int blockMultipleTimeslotsForOneFacility(Facility facility, LocalDate date, String adminId, String adminName) {
         int count = 0;
         
         SortedArrayList<Timeslot> timeslotList = getTimeslotsForOneFacility(facility, date);
         Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
-            if (iterator.next().block(userId)) {
+            if (iterator.next().block(adminId, adminName)) {
                 count++;
             }
         }
@@ -164,13 +164,13 @@ public class TimeslotMaintenance {
         return count;
     }
     
-    public int blockMultipleTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date, String userId) {
+    public int blockMultipleTimeslotsForMultipleFacilities(SortedArrayList<Facility> facilityList, LocalDate date, String adminId, String adminName) {
         int count = 0;
         SortedArrayList<Timeslot> timeslotList = getTimeslotsForMultipleFacilities(facilityList, date);
         Iterator<Timeslot> iterator = timeslotList.getIterator();
         
         while (iterator.hasNext()) {
-            if (iterator.next().block(userId)) {
+            if (iterator.next().block(adminId, adminName)) {
                 count++;
             }
         }

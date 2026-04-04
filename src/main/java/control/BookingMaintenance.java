@@ -2,16 +2,12 @@ package control;
 
 import adt.SortedArrayList;
 import entity.Booking;
-import entity.Facility;
+import entity.Timeslot;
 import entity.User;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  *
@@ -19,17 +15,14 @@ import java.time.format.DateTimeFormatter;
  */
 public class BookingMaintenance {
 
-    private static final String BOOKING_FILE = "booking.dat";
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final String BOOKING_FILE = "src/main/resources/booking.dat";
 
     private SortedArrayList<Booking> bookingList;
 
-    private final UserMaintenance userControl;
-    private final FacilityMaintenance facilityControl;
+    private TimeslotMaintenance timeslotControl;
 
     public BookingMaintenance() {
-        userControl = new UserMaintenance();
-        facilityControl = new FacilityMaintenance();
+        timeslotControl = new TimeslotMaintenance();
         bookingList = retrieveFromFile();
     }
 
@@ -54,24 +47,12 @@ public class BookingMaintenance {
                         max = num;
                     }
                 } catch (NumberFormatException e) {
-                    // ignore old invalid data
+                    // ignore invalid old data
                 }
             }
         }
 
         return "B" + String.format("%05d", max + 1);
-    }
-
-    public boolean isExistingUser(String userId) {
-        return userControl.findUserByUserId(userId) != null;
-    }
-
-    public User findUser(String userId) {
-        return userControl.findUserByUserId(userId);
-    }
-
-    public Facility findFacility(String facilityId) {
-        return facilityControl.findByFacilityId(facilityId);
     }
 
     public Booking findBookingById(String bookingId) {
@@ -100,244 +81,131 @@ public class BookingMaintenance {
         return result;
     }
 
-    public boolean addBooking(String userId, String facilityId, String date, String timeSlot) {
-        if (userId == null || userId.trim().isEmpty()) {
+    public SortedArrayList<Booking> getCurrentUserBookings() {
+        User currentUser = UserMaintenance.currentUser;
+
+        if (currentUser == null) {
+            return new SortedArrayList<>();
+        }
+
+        return getBookingsByUserId(currentUser.getUserId());
+    }
+
+    public boolean addBooking(Timeslot chosenTimeslot) {
+        User currentUser = UserMaintenance.currentUser;
+
+        if (currentUser == null || chosenTimeslot == null) {
             return false;
         }
 
-        if (facilityId == null || facilityId.trim().isEmpty()) {
+        Timeslot actualSlot = timeslotControl.findTimeslotById(chosenTimeslot.getTimeslotId());
+
+        if (actualSlot == null) {
             return false;
         }
 
-        if (date == null || date.trim().isEmpty()) {
-            return false;
-        }
-
-        if (timeSlot == null || timeSlot.trim().isEmpty()) {
-            return false;
-        }
-
-        User user = userControl.findUserByUserId(userId);
-        if (user == null) {
-            return false;
-        }
-
-        Facility facility = facilityControl.findByFacilityId(facilityId);
-        if (facility == null) {
-            return false;
-        }
-
-        if (!isValidDate(date)) {
-            return false;
-        }
-
-        if (!isValidTimeSlot(timeSlot)) {
-            return false;
-        }
-
-        if (hasBookingConflict(facilityId, date, timeSlot)) {
+        if (!actualSlot.isAvailable()) {
             return false;
         }
 
         String bookingId = generateBookingId();
 
+        boolean slotBooked = timeslotControl.bookOneTimeslot(
+                actualSlot.getTimeslotId(),
+                bookingId,
+                currentUser.getUserId(),
+                currentUser.getUserName()
+        );
+
+        if (!slotBooked) {
+            return false;
+        }
+        
+        timeslotControl = new TimeslotMaintenance();
+
         Booking newBooking = new Booking(
                 bookingId,
-                user.getUserId(),
-                facility,
-                date,
-                timeSlot
+                currentUser.getUserId(),
+                actualSlot.getFacility(),
+                actualSlot.getDate().toString(),
+                actualSlot
         );
 
         boolean added = bookingList.add(newBooking);
 
         if (added) {
             saveToFile();
-        }
-
-        return added;
-    }
-
-    public boolean cancelBooking(String bookingId) {
-        Booking booking = findBookingById(bookingId);
-
-        if (booking == null) {
-            return false;
-        }
-
-        boolean removed = bookingList.remove(booking);
-
-        if (removed) {
-            saveToFile();
-        }
-
-        return removed;
-    }
-
-    public boolean cancelBookingByUser(String bookingId, String userId) {
-        Booking booking = findBookingById(bookingId);
-
-        if (booking == null) {
-            return false;
-        }
-
-        if (!booking.getUserID().equalsIgnoreCase(userId)) {
-            return false;
-        }
-
-        boolean removed = bookingList.remove(booking);
-
-        if (removed) {
-            saveToFile();
-        }
-
-        return removed;
-    }
-
-    public String displayAllBookings() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("\n====================================================================================================\n");
-        sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
-                "Booking ID", "User ID", "Room Name", "Date", "Time Slot"));
-        sb.append("====================================================================================================\n");
-
-        if (bookingList.isEmpty()) {
-            sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
-                    "-", "-", "No booking records found", "-", "-"));
-        } else {
-            for (int i = 1; i <= bookingList.getNumberOfEntries(); i++) {
-                Booking booking = bookingList.getEntry(i);
-
-                if (booking != null) {
-                    sb.append(booking.toTableRow()).append("\n");
-                }
-            }
-        }
-
-        sb.append("====================================================================================================\n");
-        return sb.toString();
-    }
-
-    public String displayBookingsByUser(String userId) {
-        SortedArrayList<Booking> userBookings = getBookingsByUserId(userId);
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("\n====================================================================================================\n");
-        sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
-                "Booking ID", "User ID", "Room Name", "Date", "Time Slot"));
-        sb.append("====================================================================================================\n");
-
-        if (userBookings.isEmpty()) {
-            sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
-                    "-", "-", "No current booking found", "-", "-"));
-        } else {
-            for (int i = 1; i <= userBookings.getNumberOfEntries(); i++) {
-                Booking booking = userBookings.getEntry(i);
-
-                if (booking != null) {
-                    sb.append(booking.toTableRow()).append("\n");
-                }
-            }
-        }
-
-        sb.append("====================================================================================================\n");
-        return sb.toString();
-    }
-
-    public boolean hasBookingConflict(String facilityId, String date, String newTimeSlot) {
-        LocalTime newStart = extractStartTime(newTimeSlot);
-        LocalTime newEnd = extractEndTime(newTimeSlot);
-
-        if (newStart == null || newEnd == null) {
             return true;
+        } else {
+            timeslotControl.releaseSlotsByBookingId(bookingId);
+            return false;
+        }
+    }
+
+    public boolean cancelCurrentUserBooking(String bookingId) {
+        User currentUser = UserMaintenance.currentUser;
+
+        if (currentUser == null) {
+            return false;
         }
 
-        for (int i = 1; i <= bookingList.getNumberOfEntries(); i++) {
-            Booking existing = bookingList.getEntry(i);
+        Booking booking = findBookingById(bookingId);
 
-            if (existing == null) {
-                continue;
-            }
+        if (booking == null) {
+            return false;
+        }
 
-            if (!existing.getFacilityID().equalsIgnoreCase(facilityId)) {
-                continue;
-            }
+        if (!booking.getUserID().equalsIgnoreCase(currentUser.getUserId())) {
+            return false;
+        }
 
-            if (!existing.getDate().equals(date)) {
-                continue;
-            }
+        boolean removed = bookingList.remove(booking);
 
-            LocalTime existingStart = extractStartTime(existing.getTimeSlot());
-            LocalTime existingEnd = extractEndTime(existing.getTimeSlot());
+        if (removed) {
+            saveToFile();
 
-            if (existingStart == null || existingEnd == null) {
-                continue;
-            }
+            timeslotControl.reloadFromFile();
+            timeslotControl.releaseSlotsByBookingId(bookingId);
 
-            boolean overlap = newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart);
-
-            if (overlap) {
-                return true;
-            }
+            return true;
         }
 
         return false;
     }
 
-    public String buildTimeSlot(LocalTime startTime, int durationHours) {
-        LocalTime endTime = startTime.plusHours(durationHours);
-        return startTime.format(TIME_FORMAT) + "-" + endTime.format(TIME_FORMAT);
-    }
+    public String displayCurrentUserBookings() {
+        User currentUser = UserMaintenance.currentUser;
+        StringBuilder sb = new StringBuilder();
 
-    public boolean isValidDate(String date) {
-        try {
-            LocalDate.parse(date);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+        sb.append("\n====================================================================================================\n");
+        sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
+                "Booking ID", "User ID", "Room Name", "Date", "Time Slot"));
+        sb.append("====================================================================================================\n");
 
-    public boolean isValidTimeSlot(String timeSlot) {
-        LocalTime start = extractStartTime(timeSlot);
-        LocalTime end = extractEndTime(timeSlot);
-
-        if (start == null || end == null) {
-            return false;
+        if (currentUser == null) {
+            sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
+                    "-", "-", "No current user selected", "-", "-"));
+            sb.append("====================================================================================================\n");
+            return sb.toString();
         }
 
-        if (!start.isBefore(end)) {
-            return false;
+        SortedArrayList<Booking> currentUserBookings = getCurrentUserBookings();
+
+        if (currentUserBookings.isEmpty()) {
+            sb.append(String.format("%-10s %-12s %-25s %-12s %-15s%n",
+                    "-", "-", "No current booking found", "-", "-"));
+        } else {
+            for (int i = 1; i <= currentUserBookings.getNumberOfEntries(); i++) {
+                Booking booking = currentUserBookings.getEntry(i);
+
+                if (booking != null) {
+                    sb.append(booking.toTableRow()).append("\n");
+                }
+            }
         }
 
-        if (start.isBefore(LocalTime.of(9, 0))) {
-            return false;
-        }
-
-        if (end.isAfter(LocalTime.of(19, 0))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private LocalTime extractStartTime(String timeSlot) {
-        try {
-            String[] parts = timeSlot.split("-");
-            return LocalTime.parse(parts[0].trim(), TIME_FORMAT);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private LocalTime extractEndTime(String timeSlot) {
-        try {
-            String[] parts = timeSlot.split("-");
-            return LocalTime.parse(parts[1].trim(), TIME_FORMAT);
-        } catch (Exception e) {
-            return null;
-        }
+        sb.append("====================================================================================================\n");
+        return sb.toString();
     }
 
     public void saveToFile() {

@@ -1,7 +1,6 @@
 package boundary;
 
 import adt.SortedArrayList;
-import control.AdminMaintenance;
 import control.FacilityMaintenance;
 import control.TimeslotMaintenance;
 import entity.Facility;
@@ -11,7 +10,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.Scanner;
-import utility.InputOutputHelper;
 
 public class TimeslotMaintenanceUI {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -24,13 +22,11 @@ public class TimeslotMaintenanceUI {
 
     private final TimeslotMaintenance timeslotMaintenance;
     private final FacilityMaintenance facilityMaintenance;
-    private final AdminMaintenance adminMaintenance;
     private final Scanner scanner;
 
     public TimeslotMaintenanceUI() {
         this.timeslotMaintenance = new TimeslotMaintenance();
         this.facilityMaintenance = new FacilityMaintenance();
-        this.adminMaintenance = new AdminMaintenance();
         this.scanner = new Scanner(System.in);
     }
     
@@ -107,10 +103,6 @@ public class TimeslotMaintenanceUI {
         if (facilityScopeSelection == 0) return;
                 
         LocalDate date = readDate();
-        
-        if (date == null) {
-            return;
-        }
 
         SortedArrayList<Facility> targetFacilityList = null;
         int added;
@@ -125,7 +117,7 @@ public class TimeslotMaintenanceUI {
             }
 
             case 2 -> {
-                String facilityName = readFacilityName();
+                String facilityName = readFacilityName(facilityMaintenance.getAllFacilities());
                 if (facilityName == null) return;
 
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(facilityName);
@@ -136,7 +128,7 @@ public class TimeslotMaintenanceUI {
             }
 
             case 3 -> {
-                String roomType = readRoomType();
+                String roomType = readRoomType(facilityMaintenance.getAllFacilities());
                 if (roomType == null) return;
 
                 targetFacilityList = facilityMaintenance.getFacilitiesByRoomType(roomType);
@@ -166,10 +158,10 @@ public class TimeslotMaintenanceUI {
     private void menuView() {
         System.out.println("\n--- View Slots ---");
         System.out.println("Select Facility Name:");
-        System.out.println("1. " + InputOutputHelper.FNAME_CYBER);
-        System.out.println("2. " + InputOutputHelper.FNAME_LIBRARY);
-        System.out.println("3. " + InputOutputHelper.FNAME_SPORTS);
-        System.out.println("4. " + InputOutputHelper.FNAME_OTHER);
+        System.out.println("1. Cyber Centre Room");
+        System.out.println("2. Library Room");
+        System.out.println("3. Sports Facilities");
+        System.out.println("4. Other");
         System.out.println("5. All Facilities");
         System.out.println("0. Back");
 
@@ -177,10 +169,6 @@ public class TimeslotMaintenanceUI {
         if (facilityScopeSelection == 0) return;
         
         LocalDate date = readDate();
-        
-        if (date == null) {
-            return;
-        }
 
         SortedArrayList<Facility> targetFacilityList = null;
         String tableTitle = "";
@@ -188,22 +176,22 @@ public class TimeslotMaintenanceUI {
         switch (facilityScopeSelection) {
 
             case 1 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_CYBER);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Cyber Centre Room");
                 tableTitle = "Cyber Centre Room - " + date.format(DATE_FORMAT);
             }
             
             case 2 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_LIBRARY);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Library Room");
                 tableTitle = "Library Room - " + date.format(DATE_FORMAT);
             }
             
             case 3 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_SPORTS);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Sports Facilities");
                 tableTitle = "Sports Facilities - " + date.format(DATE_FORMAT);
             }
 
             case 4 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_OTHER);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Other");
                 tableTitle = "Other - " + date.format(DATE_FORMAT);
             }
             
@@ -215,7 +203,7 @@ public class TimeslotMaintenanceUI {
 
         SortedArrayList<Timeslot> timeslotList = timeslotMaintenance.getTimeslotsForMultipleFacilities(targetFacilityList, date);
         
-        SortedArrayList<Facility> displayedFacilityList = printSlotTable(timeslotList, tableTitle, date);
+        printSlotTable(timeslotList, tableTitle, date);
         
         if (timeslotList.isEmpty()) {
             pause();
@@ -224,25 +212,21 @@ public class TimeslotMaintenanceUI {
 
         System.out.println("Select a room index to view available slots, or 0 to go back:");
         
-        int roomSelection = readInt("Room No.: ", 0, displayedFacilityList.getNumberOfEntries());
+        int roomSelection = readInt("Room No.: ", 0, targetFacilityList.getNumberOfEntries());
         if (roomSelection == 0) return;
 
-        Facility chosenFacility = displayedFacilityList.getEntry(roomSelection);
+        Facility chosenFacility = targetFacilityList.getEntry(roomSelection);
         
-//        if (adminMaintenance.hasCurrentAdmin()) {
-//            menuDisplayAllBlockForAdmin(chosenFacility, date, adminMaintenance.getCurrentAdmin().getAdminId(), adminMaintenance.getCurrentAdmin().getAdminId());
+//        if (userMaintenance.currentUser.isAdmin()) {
+//            menuDisplayAllBlockForAdmin(chosenFacility, date, currentUser.getAdminId(), currentUser.getAdminName());
 //        }
 //        
 //        else {
-//            menuDisplayAllBlockForUser(chosenFacility, date);
+//            menuDisplayAlvailableBlockForUser(chosenFacility, date);
 //        }
-
-        menuDisplayAllBlockForAdmin(chosenFacility, date, "69", "420");
-        // menuDisplayAllBlockForUser(chosenFacility, date);
-
     }
     
-    private void menuDisplayAllBlockForUser(Facility facility, LocalDate date) {
+    private void menuDisplayAllBlockForUser(Facility facility, LocalDate date, String userId, String userName) {
         boolean browsing = true;
         
         while (browsing) {
@@ -277,10 +261,10 @@ public class TimeslotMaintenanceUI {
             System.out.println("1. Book a slot");
             System.out.println("0. Back");
 
-            int actionSelection = readInt("\nSelect action: ", 0, 1);
+            int actionSelection = readInt("  Select action: ", 0, 1);
 
             switch (actionSelection) {
-                // case 1 -> menuBookForChosenFacility(facility, availableTimeslot);
+                // case 1 -> menuBookForChosenFacility(availableTimeslot, userId, userName);
                 case 0 -> browsing = false;
             }
         }
@@ -298,7 +282,7 @@ public class TimeslotMaintenanceUI {
             }
             
             System.out.println("\nAll slots for: " + facility.getRoomName());
-            System.out.printf("%-4s %-10s %-10s %-12s %-15s%n", "No.", "Start", "End", "Status", "Blocked By");
+            System.out.printf("%-4s %-10s %-10s %-12s %-15s%n", "No.", "Start", "End", "Status", "Booked/Blocked By");
 
             for (int i = 1; i <= availableTimeslot.getNumberOfEntries(); i++) {
                 Timeslot timeslot = availableTimeslot.getEntry(i);
@@ -325,7 +309,7 @@ public class TimeslotMaintenanceUI {
             System.out.println("3. Delete a slot");
             System.out.println("0. Back");
 
-            int actionSelection = readInt("\nSelect action: ", 0, 3);
+            int actionSelection = readInt("  Select action: ", 0, 3);
 
             switch (actionSelection) {
                 case 1 -> menuBlockForChosenFacility(availableTimeslot, adminId, adminName);
@@ -358,16 +342,12 @@ public class TimeslotMaintenanceUI {
         
         LocalDate date = readDate();
         
-        if (date == null) {
-            return;
-        }
-        
         SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
             case 1 -> {
-                String facilityName = readFacilityName();
+                String facilityName = readFacilityName(facilityList);
                 if (facilityName == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(facilityName);
@@ -378,7 +358,7 @@ public class TimeslotMaintenanceUI {
             }
             
             case 2 -> {
-                String roomType = readRoomType();
+                String roomType = readRoomType(facilityList);
                 if (roomType == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByRoomType(roomType);
@@ -442,17 +422,13 @@ public class TimeslotMaintenanceUI {
         if (facilityScope == 0) return;
         
         LocalDate date = readDate();
-        
-        if (date == null) {
-            return;
-        }
 
         SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
             case 1 -> {
-                String facilityName = readFacilityName();
+                String facilityName = readFacilityName(facilityList);
                 if (facilityName == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(facilityName);
@@ -463,7 +439,7 @@ public class TimeslotMaintenanceUI {
             }
             
             case 2 -> {
-                String roomType = readRoomType();
+                String roomType = readRoomType(facilityList);
                 if (roomType == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByRoomType(roomType);
@@ -532,16 +508,12 @@ public class TimeslotMaintenanceUI {
         
         LocalDate date = readDate();
         
-        if (date == null) {
-            return;
-        }
-        
         SortedArrayList<Facility> targetFacilityList = null;
         int count;
         
         switch (facilityScope) {
             case 1 -> {
-                String facilityName = readFacilityName();
+                String facilityName = readFacilityName(facilityList);
                 if (facilityName == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(facilityName);
@@ -552,7 +524,7 @@ public class TimeslotMaintenanceUI {
             }
             
             case 2 -> {
-                String roomType = readRoomType();
+                String roomType = readRoomType(facilityList);
                 if (roomType == null) return;
                 
                 targetFacilityList = facilityMaintenance.getFacilitiesByRoomType(roomType);
@@ -608,11 +580,11 @@ public class TimeslotMaintenanceUI {
     // TABLE UTILITY
     // -----------------------------------------
     
-    private SortedArrayList<Facility> printSlotTable(SortedArrayList<Timeslot> timeslotList, String title, LocalDate date) {
+    private void printSlotTable(SortedArrayList<Timeslot> timeslotList, String title, LocalDate date) {
         System.out.println();
         printDivider("-", calcTableWidth());
         System.out.println(title);
-        System.out.println("Legend:   Blank=Available    /=Booked    X=Blocked   -=Unavailable");
+        System.out.println("Legend:   --=Available    /=Booked    X=Blocked");
 
         System.out.printf("%-" + COLUMN_INDEX + "s | %-" + COLUMN_WIDTH_ROOM_NAME + "s | %-" + COLUMN_WIDTH_ROOM_TYPE + "s", "No.", "Room Name", "Room Type");
         
@@ -628,7 +600,7 @@ public class TimeslotMaintenanceUI {
             System.out.println("(No slots found)");
             printDivider("=", calcTableWidth());
             
-            return new SortedArrayList<Facility>();
+            return;
         }
 
         SortedArrayList<Facility> seenFacilitilyList = new SortedArrayList<>();
@@ -663,8 +635,6 @@ public class TimeslotMaintenanceUI {
         printDivider("-", calcTableWidth());
         System.out.println("Total rooms: " + seenFacilitilyList.getNumberOfEntries());
         printDivider("=", calcTableWidth());
-        
-        return seenFacilitilyList;
     }
 
     private Timeslot findSlot(SortedArrayList<Timeslot> timeslotList, Facility facility, LocalTime startTime) {
@@ -682,10 +652,10 @@ public class TimeslotMaintenanceUI {
     }
     
     private String buildCell(Timeslot timeslot) {
-        if (timeslot == null) return "      -      ";
+        if (timeslot == null) return "     ---     ";
         if (timeslot.isBlocked()) return "      X      ";
         if (timeslot.isBooked()) return "      /      ";
-        return "             ";
+        return "      -      ";
     }
 
     private int calcTableWidth() {
@@ -725,52 +695,54 @@ public class TimeslotMaintenanceUI {
         return facilityList.getEntry(choice);
     }
     
-    private String readFacilityName() {
-        System.out.println("\nSelect Facility Name:");
-        System.out.println("1. " + InputOutputHelper.FNAME_CYBER);
-        System.out.println("2. " + InputOutputHelper.FNAME_LIBRARY);
-        System.out.println("3. " + InputOutputHelper.FNAME_SPORTS);
-        System.out.println("4. " + InputOutputHelper.FNAME_OTHER);
-        System.out.println("0. Back");
+    private String readFacilityName(SortedArrayList<Facility> facilityList) {
+        SortedArrayList<String> facilityNameList = new SortedArrayList<>();
+        Iterator<Facility> iterator = facilityList.getIterator();
 
-        int choice = readInt("Select: ", 0, 4);
+        while (iterator.hasNext()) {
+            String facilityName = iterator.next().getFacilityName();
+            if (!facilityNameList.contains(facilityName)) facilityNameList.add(facilityName);
+        }
 
-        return switch (choice) {
-            case 1 -> InputOutputHelper.FNAME_CYBER;
-            case 2 -> InputOutputHelper.FNAME_LIBRARY;
-            case 3 -> InputOutputHelper.FNAME_SPORTS;
-            case 4 -> InputOutputHelper.FNAME_OTHER;
-            default -> null;
-        };
+        if (facilityNameList.isEmpty()) {
+            System.out.println("No facilities found");
+            return null;
+        }
+
+        System.out.println("Available facility names:");
+        
+        for (int i = 1; i <= facilityNameList.getNumberOfEntries(); i++) {
+            System.out.println(i + ". " + facilityNameList.getEntry(i));
+        }
+
+        int choice = readInt("Select facility name: ", 1, facilityNameList.getNumberOfEntries());
+        
+        return facilityNameList.getEntry(choice);
     }
 
-    private String readRoomType() {
-        String facilityName = readFacilityName();
-        if (facilityName == null) return null;
+    private String readRoomType(SortedArrayList<Facility> facilityList) {
+        SortedArrayList<String> roomTypeList = new SortedArrayList<>();
+        Iterator<Facility> iterator = facilityList.getIterator();
 
-        SortedArrayList<String> roomTypeList = getRoomTypeListByFacilityName(facilityName);
+        while (iterator.hasNext()) {
+            String roomType = iterator.next().getRoomType();
+            if (!roomTypeList.contains(roomType)) roomTypeList.add(roomType);
+        }
 
-        System.out.println("\nSelect Room Type:");
+        if (roomTypeList.isEmpty()) {
+            System.out.println("No room types found");
+            return null;
+        }
+
+        System.out.println("Available room types:");
         
         for (int i = 1; i <= roomTypeList.getNumberOfEntries(); i++) {
             System.out.println(i + ". " + roomTypeList.getEntry(i));
         }
+
+        int choice = readInt("Select room type: ", 1, roomTypeList.getNumberOfEntries());
         
-        System.out.println("0. Back");
-
-        int choice = readInt("Select: ", 0, roomTypeList.getNumberOfEntries());
-        if (choice == 0) return null;
-
         return roomTypeList.getEntry(choice);
-    }
-
-    private SortedArrayList<String> getRoomTypeListByFacilityName(String facilityName) {
-        return switch (facilityName) {
-            case InputOutputHelper.FNAME_CYBER -> InputOutputHelper.roomTypesCyberList;
-            case InputOutputHelper.FNAME_LIBRARY -> InputOutputHelper.roomTypesLibraryList;
-            case InputOutputHelper.FNAME_SPORTS -> InputOutputHelper.roomTypesSportsList;
-            default -> InputOutputHelper.roomTypesOtherList;
-        };
     }
     
     private LocalDate readDate() {

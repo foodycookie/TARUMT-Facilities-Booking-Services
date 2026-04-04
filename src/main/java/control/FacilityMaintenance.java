@@ -9,10 +9,9 @@ import entity.Facility;
  *
  * <p><b>Facility ID format:</b>
  * <ul>
- *   <li>C001, C002, … — Cyber Centre</li>
- *   <li>L001, L002, … — Library (Discussion Rooms &amp; Individual Study Rooms)</li>
+ *   <li>L001, L002, … — Library Discussion Room / Individual Study Room</li>
+ *   <li>C001, C002, … — Cyber Centre Discussion Room</li>
  *   <li>S001, S002, … — Sports Facilities</li>
- *   <li>O001, O002, … — Other (miscellaneous facilities)</li>
  * </ul>
  * Each prefix group maintains its own independent counter, so adding a Cyber
  * room never bumps the Library sequence, and vice-versa.
@@ -35,8 +34,8 @@ import entity.Facility;
  * alphabetically — exploiting the sorted order to avoid unnecessary comparisons.
  * This is the same pattern used in {@code TimeslotMaintenance.findTimeslotById()}.
  *
+ * @author (facility module)
  */
-
 public class FacilityMaintenance {
 
     // ------------------------------------------------------------------ //
@@ -46,17 +45,14 @@ public class FacilityMaintenance {
     /** Relative path to the binary data file for facilities. */
     private static final String FACILITY_FILE = "src/main/resources/facilities.dat";
 
-    /** Prefix for Library (Discussion Rooms and Individual Study Rooms). */
+    /** Prefix for Library Discussion Room and Individual Study Room. */
     public static final String PREFIX_LIBRARY = "L";
 
-    /** Prefix for Cyber Centre. */
+    /** Prefix for Cyber Centre Discussion Room. */
     public static final String PREFIX_CYBER   = "C";
 
     /** Prefix for Sports Facilities. */
     public static final String PREFIX_SPORTS  = "S";
-
-    /** Prefix for Other / miscellaneous facilities. */
-    public static final String PREFIX_OTHER   = "O";
 
     /** Zero-pad width for the numeric portion of an ID, e.g. 001. */
     private static final int ID_PAD_WIDTH = 3;
@@ -197,8 +193,7 @@ public class FacilityMaintenance {
      * <ul>
      *   <li>Name contains {@code "cyber"}  → {@code "C"}</li>
      *   <li>Name contains {@code "sport"}  → {@code "S"}</li>
-     *   <li>Name equals   {@code "other"}  → {@code "O"}</li>
-     *   <li>Anything else (Library)        → {@code "L"}</li>
+     *   <li>Anything else (Library / Study) → {@code "L"}</li>
      * </ul>
      *
      * @param facilityName the facility category name entered by the user
@@ -207,9 +202,8 @@ public class FacilityMaintenance {
     public String resolvePrefixFor(String facilityName) {
         if (facilityName == null) return PREFIX_LIBRARY;
         String lower = facilityName.toLowerCase();
-        if (lower.contains("cyber"))     return PREFIX_CYBER;
-        if (lower.contains("sport"))     return PREFIX_SPORTS;
-        if (lower.equals("other"))       return PREFIX_OTHER;
+        if (lower.contains("cyber"))  return PREFIX_CYBER;
+        if (lower.contains("sport"))  return PREFIX_SPORTS;
         return PREFIX_LIBRARY;
     }
 
@@ -253,7 +247,7 @@ public class FacilityMaintenance {
 
     /**
      * Validates that a facility ID string matches the expected format:
-     * one letter prefix (L / C / S / O) followed by digits.
+     * one letter prefix (L / C / S) followed by digits.
      *
      * @param facilityId the ID to validate
      * @return {@code true} if the format is correct
@@ -263,8 +257,7 @@ public class FacilityMaintenance {
         String prefix = facilityId.substring(0, 1);
         if (!prefix.equals(PREFIX_LIBRARY)
                 && !prefix.equals(PREFIX_CYBER)
-                && !prefix.equals(PREFIX_SPORTS)
-                && !prefix.equals(PREFIX_OTHER)) {
+                && !prefix.equals(PREFIX_SPORTS)) {
             return false;
         }
         try {
@@ -564,19 +557,19 @@ public class FacilityMaintenance {
     public String displayAllFacilities() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n==========================================================================================\n");
-        sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+        sb.append("\n==========================================================================\n");
+        sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                 "Facility ID", "Facility Name", "Room Type", "Room Name"));
-        sb.append("==========================================================================================\n");
+        sb.append("==========================================================================\n");
 
         if (facilityList.isEmpty()) {
-            sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+            sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                     "-", "-", "-", "No facilities found."));
         } else {
             for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
                 Facility f = facilityList.getEntry(i);
                 if (f != null) {
-                    sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+                    sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                             f.getFacilityId(),
                             f.getFacilityName(),
                             f.getRoomType(),
@@ -585,7 +578,7 @@ public class FacilityMaintenance {
             }
         }
 
-        sb.append("==========================================================================================\n");
+        sb.append("==========================================================================\n");
         return sb.toString();
     }
 
@@ -598,19 +591,19 @@ public class FacilityMaintenance {
     public String displayFacilityList(SortedArrayList<Facility> list) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n==========================================================================================\n");
-        sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+        sb.append("\n==========================================================================\n");
+        sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                 "Facility ID", "Facility Name", "Room Type", "Room Name"));
-        sb.append("==========================================================================================\n");
+        sb.append("==========================================================================\n");
 
         if (list == null || list.isEmpty()) {
-            sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+            sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                     "-", "-", "-", "No facilities found."));
         } else {
             for (int i = 1; i <= list.getNumberOfEntries(); i++) {
                 Facility f = list.getEntry(i);
                 if (f != null) {
-                    sb.append(String.format("%-12s %-20s %-46s %-15s%n",
+                    sb.append(String.format("%-12s %-35s %-30s %-15s%n",
                             f.getFacilityId(),
                             f.getFacilityName(),
                             f.getRoomType(),
@@ -619,7 +612,7 @@ public class FacilityMaintenance {
             }
         }
 
-        sb.append("==========================================================================================\n");
+        sb.append("==========================================================================\n");
         return sb.toString();
     }
 }

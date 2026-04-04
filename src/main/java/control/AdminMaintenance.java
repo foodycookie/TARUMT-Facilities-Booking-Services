@@ -8,11 +8,10 @@ import entity.Admin;
  *
  * @author TAY TIAN YOU
  */
+
 public class AdminMaintenance {
     private SortedArrayList<Admin> adminList;
     private final AdminDAO adminDAO;
-
-    public static Admin currentAdmin;
 
     public AdminMaintenance() {
         adminDAO = new AdminDAO("src/main/resources/admin.dat");
@@ -36,13 +35,11 @@ public class AdminMaintenance {
 
         for (int i = 1; i <= adminList.getNumberOfEntries(); i++) {
             Admin admin = adminList.getEntry(i);
-
             if (admin != null) {
-                String adminId = admin.getAdminId();
-
-                if (adminId != null && adminId.startsWith("A")) {
+                String id = admin.getAdminId();
+                if (id != null && id.startsWith("A")) {
                     try {
-                        int num = Integer.parseInt(adminId.substring(1));
+                        int num = Integer.parseInt(id.substring(1));
                         if (num > max) {
                             max = num;
                         }
@@ -59,114 +56,51 @@ public class AdminMaintenance {
     public Admin findAdminByAdminId(String adminId) {
         for (int i = 1; i <= adminList.getNumberOfEntries(); i++) {
             Admin admin = adminList.getEntry(i);
-
             if (admin != null && admin.getAdminId().equalsIgnoreCase(adminId)) {
                 return admin;
             }
         }
-
         return null;
     }
 
     public boolean addAdmin(Admin admin) {
-        if (admin == null) {
-            return false;
-        }
-
-        if (!isValidAdminName(admin.getAdminName())) {
+        if (admin == null || !isValidAdminName(admin.getAdminName())) {
             return false;
         }
 
         boolean added = adminList.add(admin);
-
         if (added) {
             saveToFile();
         }
-
         return added;
-    }
-
-    public boolean addNewAdmin(String adminName) {
-        if (!isValidAdminName(adminName)) {
-            return false;
-        }
-
-        String generatedAdminId = generateAdminId();
-        Admin newAdmin = new Admin(generatedAdminId, adminName);
-
-        return addAdmin(newAdmin);
     }
 
     public boolean updateAdminName(String adminId, String newAdminName) {
         Admin existingAdmin = findAdminByAdminId(adminId);
 
-        if (existingAdmin == null) {
-            return false;
-        }
-
-        if (!isValidAdminName(newAdminName)) {
+        if (existingAdmin == null || !isValidAdminName(newAdminName)) {
             return false;
         }
 
         Admin updatedAdmin = new Admin(existingAdmin.getAdminId(), newAdminName);
 
         boolean removed = adminList.remove(existingAdmin);
-
         if (!removed) {
             return false;
         }
 
         boolean added = adminList.add(updatedAdmin);
-
         if (added) {
             saveToFile();
             return true;
         } else {
-            adminList.add(existingAdmin); // rollback
+            adminList.add(existingAdmin);
             return false;
         }
-    }
-
-    public boolean selectCurrentAdmin(String adminId) {
-        Admin admin = findAdminByAdminId(adminId);
-
-        if (admin == null) {
-            return false;
-        }
-
-        currentAdmin = admin;
-        return true;
-    }
-
-    public Admin getCurrentAdmin() {
-        return currentAdmin;
-    }
-
-    public boolean hasCurrentAdmin() {
-        return currentAdmin != null;
-    }
-
-    public boolean updateCurrentAdminName(String newName) {
-        if (currentAdmin == null) {
-            return false;
-        }
-
-        if (newName == null || newName.trim().isEmpty()) {
-            newName = currentAdmin.getAdminName();
-        }
-
-        boolean updated = updateAdminName(currentAdmin.getAdminId(), newName);
-
-        if (updated) {
-            currentAdmin = findAdminByAdminId(currentAdmin.getAdminId());
-        }
-
-        return updated;
     }
 
     public String displayAllAdmins() {
         StringBuilder sb = new StringBuilder();
-
         sb.append("\n====================================================\n");
         sb.append(String.format("%-12s %-25s %-10s\n", "Admin ID", "Name", "Role"));
         sb.append("====================================================\n");
@@ -176,7 +110,6 @@ public class AdminMaintenance {
         } else {
             for (int i = 1; i <= adminList.getNumberOfEntries(); i++) {
                 Admin admin = adminList.getEntry(i);
-
                 if (admin != null) {
                     sb.append(String.format("%-12s %-25s %-10s\n",
                             admin.getAdminId(),

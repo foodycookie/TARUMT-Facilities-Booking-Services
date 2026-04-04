@@ -176,8 +176,8 @@ public class TimeslotMaintenanceUI {
         switch (facilityScopeSelection) {
 
             case 1 -> {
-                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Cyber Centre");
-                tableTitle = "Cyber Centre Discussion Room — " + date.format(DATE_FORMAT);
+                targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName("Cyber Centre Room");
+                tableTitle = "Cyber Centre Room — " + date.format(DATE_FORMAT);
             }
             
             case 2 -> {

@@ -44,7 +44,7 @@ public class FacilityMaintenance {
     // ------------------------------------------------------------------ //
 
     /** Relative path to the binary data file for facilities. */
-    private static final String FACILITY_FILE = "src/main/resources/facilities.dat";
+    private static final String FACILITY_FILE = "data/facilities.dat";
 
     /** Prefix for Library (Discussion Rooms and Individual Study Rooms). */
     public static final String PREFIX_LIBRARY = "L";
@@ -564,19 +564,19 @@ public class FacilityMaintenance {
     public String displayAllFacilities() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n==========================================================================\n");
-        sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+        sb.append("\n==========================================================================================\n");
+        sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                 "Facility ID", "Facility Name", "Room Type", "Room Name"));
-        sb.append("==========================================================================\n");
+        sb.append("==========================================================================================\n");
 
         if (facilityList.isEmpty()) {
-            sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+            sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                     "-", "-", "-", "No facilities found."));
         } else {
             for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
                 Facility f = facilityList.getEntry(i);
                 if (f != null) {
-                    sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+                    sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                             f.getFacilityId(),
                             f.getFacilityName(),
                             f.getRoomType(),
@@ -585,7 +585,7 @@ public class FacilityMaintenance {
             }
         }
 
-        sb.append("==========================================================================\n");
+        sb.append("==========================================================================================\n");
         return sb.toString();
     }
 
@@ -598,19 +598,19 @@ public class FacilityMaintenance {
     public String displayFacilityList(SortedArrayList<Facility> list) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n==========================================================================\n");
-        sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+        sb.append("\n==========================================================================================\n");
+        sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                 "Facility ID", "Facility Name", "Room Type", "Room Name"));
-        sb.append("==========================================================================\n");
+        sb.append("==========================================================================================\n");
 
         if (list == null || list.isEmpty()) {
-            sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+            sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                     "-", "-", "-", "No facilities found."));
         } else {
             for (int i = 1; i <= list.getNumberOfEntries(); i++) {
                 Facility f = list.getEntry(i);
                 if (f != null) {
-                    sb.append(String.format("%-12s %-35s %-30s %-15s%n",
+                    sb.append(String.format("%-12s %-20s %-46s %-15s%n",
                             f.getFacilityId(),
                             f.getFacilityName(),
                             f.getRoomType(),
@@ -619,7 +619,7 @@ public class FacilityMaintenance {
             }
         }
 
-        sb.append("==========================================================================\n");
+        sb.append("==========================================================================================\n");
         return sb.toString();
     }
 }

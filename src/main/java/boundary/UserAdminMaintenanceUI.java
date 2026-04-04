@@ -10,7 +10,6 @@ import java.util.Scanner;
  *
  * @author TAY TIAN YOU
  */
-
 public class UserAdminMaintenanceUI {
     private final Scanner scanner = new Scanner(System.in);
     private final UserMaintenance userControl = new UserMaintenance();
@@ -77,11 +76,7 @@ public class UserAdminMaintenanceUI {
         String repeat;
 
         do {
-            String generatedUserId = userControl.generateUserId();
-
             System.out.println("\n========== ADD NEW USER ==========");
-            System.out.println("Generated User ID: " + generatedUserId);
-
             System.out.print("Enter User Name: ");
             String userName = scanner.nextLine().trim();
 
@@ -91,6 +86,7 @@ public class UserAdminMaintenanceUI {
                 continue;
             }
 
+            String generatedUserId = userControl.generateUserId();
             User tempUser = new User(generatedUserId, userName);
 
             System.out.println("\n---------- TEMP PROFILE ----------");
@@ -105,6 +101,7 @@ public class UserAdminMaintenanceUI {
             switch (confirmChoice) {
                 case 1 -> {
                     boolean added = userControl.addUser(tempUser);
+
                     if (added) {
                         System.out.println("User added successfully.");
                         repeat = askYesNo("Add another user? (Y/N): ");
@@ -119,7 +116,6 @@ public class UserAdminMaintenanceUI {
                     repeat = "N";
                 }
             }
-
         } while (repeat.equalsIgnoreCase("Y"));
     }
 
@@ -127,11 +123,7 @@ public class UserAdminMaintenanceUI {
         String repeat;
 
         do {
-            String generatedAdminId = adminControl.generateAdminId();
-
             System.out.println("\n========== ADD NEW ADMIN ==========");
-            System.out.println("Generated Admin ID: " + generatedAdminId);
-
             System.out.print("Enter Admin Name: ");
             String adminName = scanner.nextLine().trim();
 
@@ -141,6 +133,7 @@ public class UserAdminMaintenanceUI {
                 continue;
             }
 
+            String generatedAdminId = adminControl.generateAdminId();
             Admin tempAdmin = new Admin(generatedAdminId, adminName);
 
             System.out.println("\n---------- TEMP PROFILE ----------");
@@ -155,6 +148,7 @@ public class UserAdminMaintenanceUI {
             switch (confirmChoice) {
                 case 1 -> {
                     boolean added = adminControl.addAdmin(tempAdmin);
+
                     if (added) {
                         System.out.println("Admin added successfully.");
                         repeat = askYesNo("Add another admin? (Y/N): ");
@@ -169,7 +163,6 @@ public class UserAdminMaintenanceUI {
                     repeat = "N";
                 }
             }
-
         } while (repeat.equalsIgnoreCase("Y"));
     }
 
@@ -178,29 +171,28 @@ public class UserAdminMaintenanceUI {
         System.out.print("Enter your User ID: ");
         String userId = scanner.nextLine().trim();
 
-        User currentUser = userControl.findUserByUserId(userId);
+        boolean found = userControl.selectCurrentUser(userId);
 
-        if (currentUser == null) {
+        if (!found) {
             System.out.println("User not found.");
             return;
         }
 
         int choice;
         do {
+            User currentUser = userControl.getCurrentUser();
+
             System.out.println("\n============= " + currentUser.getUserName() + " =============");
             System.out.println("1. Profile");
-            System.out.println("2. Booking");
             System.out.println("0. Back");
             System.out.print("Enter choice: ");
             choice = readChoice(0, 2);
 
             switch (choice) {
-                case 1 -> userProfileMenu(currentUser);
-                case 2 -> userBookingPlaceholder(currentUser);
+                case 1 -> userProfileMenu();
                 case 0 -> System.out.println("Returning to User Menu...");
             }
 
-            currentUser = userControl.findUserByUserId(userId);
         } while (choice != 0);
     }
 
@@ -209,38 +201,39 @@ public class UserAdminMaintenanceUI {
         System.out.print("Enter your Admin ID: ");
         String adminId = scanner.nextLine().trim();
 
-        Admin currentAdmin = adminControl.findAdminByAdminId(adminId);
+        boolean found = adminControl.selectCurrentAdmin(adminId);
 
-        if (currentAdmin == null) {
+        if (!found) {
             System.out.println("Admin not found.");
             return;
         }
 
         int choice;
         do {
+            Admin currentAdmin = adminControl.getCurrentAdmin();
+
             System.out.println("\n============= " + currentAdmin.getAdminName() + " =============");
             System.out.println("1. Profile");
             System.out.println("2. Manage User");
-            System.out.println("3. Booking");
             System.out.println("0. Back");
             System.out.print("Enter choice: ");
             choice = readChoice(0, 3);
 
             switch (choice) {
-                case 1 -> adminProfileMenu(currentAdmin);
+                case 1 -> adminProfileMenu();
                 case 2 -> adminManageUserMenu();
-                case 3 -> adminBookingPlaceholder(currentAdmin);
                 case 0 -> System.out.println("Returning to Admin Menu...");
             }
 
-            currentAdmin = adminControl.findAdminByAdminId(adminId);
         } while (choice != 0);
     }
 
-    private void userProfileMenu(User currentUser) {
+    private void userProfileMenu() {
         int choice;
 
         do {
+            User currentUser = userControl.getCurrentUser();
+
             System.out.println("\n========== USER PROFILE ==========");
             System.out.println(currentUser);
             System.out.println("\n1. Update");
@@ -253,15 +246,10 @@ public class UserAdminMaintenanceUI {
                     System.out.print("Enter new name (press Enter to keep current): ");
                     String newName = scanner.nextLine().trim();
 
-                    if (newName.isEmpty()) {
-                        newName = currentUser.getUserName();
-                    }
-
-                    boolean updated = userControl.updateUserName(currentUser.getUserId(), newName);
+                    boolean updated = userControl.updateCurrentUserName(newName);
 
                     if (updated) {
                         System.out.println("User profile updated successfully.");
-                        currentUser = userControl.findUserByUserId(currentUser.getUserId());
                     } else {
                         System.out.println("Failed to update user profile.");
                     }
@@ -271,10 +259,12 @@ public class UserAdminMaintenanceUI {
         } while (choice != 0);
     }
 
-    private void adminProfileMenu(Admin currentAdmin) {
+    private void adminProfileMenu() {
         int choice;
 
         do {
+            Admin currentAdmin = adminControl.getCurrentAdmin();
+
             System.out.println("\n========== ADMIN PROFILE ==========");
             System.out.println(currentAdmin);
             System.out.println("\n1. Update");
@@ -287,15 +277,10 @@ public class UserAdminMaintenanceUI {
                     System.out.print("Enter new name (press Enter to keep current): ");
                     String newName = scanner.nextLine().trim();
 
-                    if (newName.isEmpty()) {
-                        newName = currentAdmin.getAdminName();
-                    }
-
-                    boolean updated = adminControl.updateAdminName(currentAdmin.getAdminId(), newName);
+                    boolean updated = adminControl.updateCurrentAdminName(newName);
 
                     if (updated) {
                         System.out.println("Admin profile updated successfully.");
-                        currentAdmin = adminControl.findAdminByAdminId(currentAdmin.getAdminId());
                     } else {
                         System.out.println("Failed to update admin profile.");
                     }
@@ -372,8 +357,7 @@ public class UserAdminMaintenanceUI {
         System.out.println("\nUser Record");
         System.out.println(existingUser);
 
-        System.out.print("Confirm delete? (Y/N): ");
-        String confirm = askYesNo("");
+        String confirm = askYesNo("Confirm delete? (Y/N): ");
 
         if (confirm.equalsIgnoreCase("Y")) {
             boolean deleted = userControl.deleteUser(userId);
@@ -386,20 +370,6 @@ public class UserAdminMaintenanceUI {
         } else {
             System.out.println("Delete cancelled.");
         }
-    }
-
-    private void userBookingPlaceholder(User currentUser) {
-        System.out.println("\n[Booking module placeholder]");
-        System.out.println("Current User ID: " + currentUser.getUserId());
-        System.out.println("Current User Name: " + currentUser.getUserName());
-        System.out.println("Merge your friend's booking UI/control here.");
-    }
-
-    private void adminBookingPlaceholder(Admin currentAdmin) {
-        System.out.println("\n[Booking module placeholder]");
-        System.out.println("Current Admin ID: " + currentAdmin.getAdminId());
-        System.out.println("Current Admin Name: " + currentAdmin.getAdminName());
-        System.out.println("Merge your friend's booking UI/control here.");
     }
 
     private int readChoice(int min, int max) {
@@ -426,17 +396,14 @@ public class UserAdminMaintenanceUI {
         String answer;
 
         while (true) {
-            if (!prompt.isEmpty()) {
-                System.out.print(prompt);
-            }
-
+            System.out.print(prompt);
             answer = scanner.nextLine().trim();
 
             if (answer.equalsIgnoreCase("Y") || answer.equalsIgnoreCase("N")) {
                 return answer;
             }
 
-            System.out.print("Invalid input. Enter Y or N: ");
+            System.out.println("Invalid input. Enter Y or N.");
         }
     }
 }

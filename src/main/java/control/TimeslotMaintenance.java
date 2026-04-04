@@ -341,4 +341,42 @@ public class TimeslotMaintenance {
         
         return count;
     }
+    
+        public boolean bookOneTimeslot(String timeslotId, String bookingId, String userId, String userName) {
+        Timeslot timeslot = findTimeslotById(timeslotId);
+
+        if (timeslot == null) {
+            return false;
+        }
+
+        boolean success = timeslot.book(bookingId, userId, userName);
+
+        if (success) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
+
+        return success;
+    }
+        
+        public int releaseSlotsByBookingId(String bookingId) {
+    int count = 0;
+    Iterator<Timeslot> it = timeslotListDB.getIterator();
+
+    while (it.hasNext()) {
+        Timeslot slot = it.next();
+        if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
+            slot.cancel();
+            count++;
+        }
+    }
+
+    if (count > 0) {
+        timeslotDAO.saveToFile(timeslotListDB);
+    }
+
+    return count;
+}
+        public void reloadFromFile() {
+            timeslotListDB = timeslotDAO.retrieveFromFile();
+}
 }

@@ -1,13 +1,14 @@
 package boundary;
 
+import adt.SortedArrayList;
 import control.BookingMaintenance;
 import control.FacilityMaintenance;
+import control.TimeslotMaintenance;
 import control.UserMaintenance;
 import entity.Facility;
+import entity.Timeslot;
 import entity.User;
-
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
@@ -20,10 +21,9 @@ public class BookingMaintenanceUI {
     private final Scanner scanner = new Scanner(System.in);
     private final BookingMaintenance bookingControl = new BookingMaintenance();
     private final FacilityMaintenance facilityControl = new FacilityMaintenance();
-    private final UserMaintenance userControl = new UserMaintenance();
+    private TimeslotMaintenance timeslotControl = new TimeslotMaintenance();
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     public void start() {
@@ -34,204 +34,202 @@ public class BookingMaintenanceUI {
             System.out.println("1. Add Booking");
             System.out.println("2. Display Current Booking");
             System.out.println("3. Cancel Booking");
-            System.out.println("4. Display All Bookings");
             System.out.println("0. Back");
             System.out.print("Enter choice: ");
-            choice = readChoice(0, 4);
+            choice = readChoice(0, 3);
 
             switch (choice) {
                 case 1 -> addBookingFlow();
                 case 2 -> displayCurrentBookingFlow();
                 case 3 -> cancelBookingFlow();
-                case 4 -> System.out.println(bookingControl.displayAllBookings());
                 case 0 -> System.out.println("Returning...");
             }
-
         } while (choice != 0);
     }
 
     private void addBookingFlow() {
-        System.out.println("\n========== ADD BOOKING ==========");
+        User currentUser = UserMaintenance.currentUser;
 
-        User currentUser = userControl.getCurrentUser();
-        String userId;
-
-        if (currentUser != null) {
-            System.out.println("Current User: " + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
-            String useCurrent = askYesNo("Use current user? (Y/N): ");
-
-            if (useCurrent.equalsIgnoreCase("Y")) {
-                userId = currentUser.getUserId();
-            } else {
-                System.out.print("Enter User ID: ");
-                userId = scanner.nextLine().trim();
-            }
-        } else {
-            System.out.print("Enter User ID: ");
-            userId = scanner.nextLine().trim();
-        }
-
-        if (!bookingControl.isExistingUser(userId)) {
-            System.out.println("User ID does not exist in user.dat.");
+        if (currentUser == null) {
+            System.out.println("\nNo current user selected. Please select user first in User module.");
             return;
         }
 
-        System.out.println("\nAvailable Facilities:");
-        System.out.println(facilityControl.displayAllFacilities());
+        System.out.println("\n========== ADD BOOKING ==========");
+        System.out.println("Current User: " + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
 
-        System.out.print("Enter Facility ID: ");
-        String facilityId = scanner.nextLine().trim().toUpperCase();
+        SortedArrayList<Facility> facilityList = facilityControl.getAllFacilities();
 
-        Facility facility = bookingControl.findFacility(facilityId);
+        if (facilityList == null || facilityList.isEmpty()) {
+            System.out.println("No facilities found.");
+            return;
+        }
 
-        if (facility == null) {
-            System.out.println("Facility not found.");
+        Facility chosenFacility = readFacility(facilityList);
+        if (chosenFacility == null) {
             return;
         }
 
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
 
-        System.out.println("\nChoose Booking Date:");
-        System.out.println("1. " + today.format(DISPLAY_DATE_FORMAT));
-        System.out.println("2. " + tomorrow.format(DISPLAY_DATE_FORMAT));
+        System.out.println("\nChoose booking date:");
+        System.out.println("1. " + today.format(DATE_FORMAT));
+        System.out.println("2. " + tomorrow.format(DATE_FORMAT));
         System.out.print("Enter choice: ");
         int dateChoice = readChoice(1, 2);
 
         LocalDate selectedDate = (dateChoice == 1) ? today : tomorrow;
 
-        System.out.println("\nChoose Start Time:");
-        int startIndex = 1;
-        LocalTime[] startTimes = new LocalTime[10];
-        LocalTime timeCursor = LocalTime.of(9, 0);
+        SortedArrayList<Timeslot> timeslotList = timeslotControl.getTimeslotsForOneFacility(chosenFacility, selectedDate);
 
-        for (int i = 0; i < 10; i++) {
-            startTimes[i] = timeCursor;
-            System.out.println((i + 1) + ". " + timeCursor.format(TIME_FORMAT));
-            timeCursor = timeCursor.plusHours(1);
-        }
-
-        System.out.print("Enter choice: ");
-        int startChoice = readChoice(1, 10);
-        LocalTime startTime = startTimes[startChoice - 1];
-
-        System.out.println("\nDuration:");
-        System.out.println("1. 1 hour");
-        System.out.println("2. 2 hours");
-        System.out.print("Enter choice: ");
-        int durationChoice = readChoice(1, 2);
-
-        if (durationChoice == 2 && startTime.plusHours(2).isAfter(LocalTime.of(19, 0))) {
-            System.out.println("2-hour booking exceeds operation time.");
+        if (timeslotList == null || timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found for selected facility and date.");
             return;
         }
 
-        String date = selectedDate.format(DATE_FORMAT);
-        String timeSlot = bookingControl.buildTimeSlot(startTime, durationChoice);
+        printTimeslotList(timeslotList, chosenFacility, selectedDate);
 
-        if (bookingControl.hasBookingConflict(facilityId, date, timeSlot)) {
-            System.out.println("Booking conflict detected. Selected time slot is already taken.");
+        boolean booked = menuBookForChosenFacility(
+                chosenFacility,
+                timeslotList,
+                currentUser.getUserId(),
+                currentUser.getUserName()
+        );
+
+        if (booked) {
+            SortedArrayList<Timeslot> refreshedList =
+                    timeslotControl.getTimeslotsForOneFacility(chosenFacility, selectedDate);
+        }
+    }
+
+    private void displayCurrentBookingFlow() {
+        System.out.println(bookingControl.displayCurrentUserBookings());
+    }
+
+    private void cancelBookingFlow() {
+        User currentUser = UserMaintenance.currentUser;
+
+        if (currentUser == null) {
+            System.out.println("\nNo current user selected. Please select user first in User module.");
             return;
+        }
+
+        System.out.println("\n========== CANCEL BOOKING ==========");
+        System.out.println("Current User: " + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
+
+        System.out.println(bookingControl.displayCurrentUserBookings());
+
+        System.out.print("Enter Booking ID to cancel: ");
+        String bookingId = scanner.nextLine().trim();
+
+        String confirm = askYesNo("Confirm cancel booking? (Y/N): ");
+
+        if (confirm.equalsIgnoreCase("Y")) {
+            boolean cancelled = bookingControl.cancelCurrentUserBooking(bookingId);
+
+            if (cancelled) {
+                timeslotControl.reloadFromFile();
+                System.out.println("Booking cancelled successfully.");
+            } else {
+                System.out.println("Failed to cancel booking.");
+            }
+        } else {
+            System.out.println("Cancel operation aborted.");
+        }
+    }
+
+    private boolean menuBookForChosenFacility(Facility facility, SortedArrayList<Timeslot> timeslotList, String userId, String userName) {
+        if (timeslotList == null || timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found");
+            return false;
+        }
+
+        System.out.print("Select slot No. to book: ");
+        int timeslotSelection = readChoice(1, timeslotList.getNumberOfEntries());
+        Timeslot chosenTimeslot = timeslotList.getEntry(timeslotSelection);
+
+        if (chosenTimeslot.isBooked()) {
+            System.out.println("\nSlot is already BOOKED");
+            return false;
+        }
+
+        if (chosenTimeslot.isBlocked()) {
+            System.out.println("\nSlot is already BLOCKED");
+            return false;
         }
 
         System.out.println("\n---------- BOOKING PREVIEW ----------");
         System.out.println("User ID      : " + userId);
+        System.out.println("User Name    : " + userName);
         System.out.println("Facility ID  : " + facility.getFacilityId());
         System.out.println("Facility Name: " + facility.getFacilityName());
         System.out.println("Room Type    : " + facility.getRoomType());
         System.out.println("Room Name    : " + facility.getRoomName());
-        System.out.println("Date         : " + date);
-        System.out.println("Time Slot    : " + timeSlot);
+        System.out.println("Date         : " + chosenTimeslot.getDate());
+        System.out.println("Timeslot ID  : " + chosenTimeslot.getTimeslotId());
+        System.out.println("Time         : " + chosenTimeslot.getStartTime().format(TIME_FORMAT)
+                + " - " + chosenTimeslot.getEndTime().format(TIME_FORMAT));
         System.out.println("-------------------------------------");
 
         String confirm = askYesNo("Confirm booking? (Y/N): ");
 
         if (confirm.equalsIgnoreCase("Y")) {
-            boolean added = bookingControl.addBooking(userId, facilityId, date, timeSlot);
+            boolean booked = bookingControl.addBooking(chosenTimeslot);
 
-            if (added) {
+            if (booked) {
                 System.out.println("Booking added successfully.");
+                return true;
             } else {
                 System.out.println("Failed to add booking.");
+                return false;
             }
         } else {
             System.out.println("Booking cancelled.");
+            return false;
         }
     }
 
-    private void displayCurrentBookingFlow() {
-        System.out.println("\n====== DISPLAY CURRENT BOOKING ======");
+    private void printTimeslotList(SortedArrayList<Timeslot> timeslotList, Facility facility, LocalDate date) {
+        timeslotControl = new TimeslotMaintenance();
+        System.out.println("\n========== AVAILABLE TIMESLOTS ==========");
+        System.out.println("Facility : " + facility.getRoomName());
+        System.out.println("Date     : " + date.format(DATE_FORMAT));
+        System.out.printf("%-4s %-10s %-10s %-12s%n", "No.", "Start", "End", "Status");
 
-        User currentUser = userControl.getCurrentUser();
-        String userId;
+        for (int i = 1; i <= timeslotList.getNumberOfEntries(); i++) {
+            Timeslot timeslot = timeslotList.getEntry(i);
 
-        if (currentUser != null) {
-            System.out.println("Current User: " + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
-            String useCurrent = askYesNo("Display booking for current user? (Y/N): ");
+            String status = switch (timeslot.getStatus()) {
+                case BOOKED -> "BOOKED";
+                case BLOCKED -> "BLOCKED";
+                default -> "AVAILABLE";
+            };
 
-            if (useCurrent.equalsIgnoreCase("Y")) {
-                userId = currentUser.getUserId();
-            } else {
-                System.out.print("Enter User ID: ");
-                userId = scanner.nextLine().trim();
-            }
-        } else {
-            System.out.print("Enter User ID: ");
-            userId = scanner.nextLine().trim();
+            System.out.printf("%-4d %-10s %-10s %-12s%n",
+                    i,
+                    timeslot.getStartTime().format(TIME_FORMAT),
+                    timeslot.getEndTime().format(TIME_FORMAT),
+                    status);
         }
-
-        if (!bookingControl.isExistingUser(userId)) {
-            System.out.println("User ID does not exist.");
-            return;
-        }
-
-        System.out.println(bookingControl.displayBookingsByUser(userId));
     }
 
-    private void cancelBookingFlow() {
-        System.out.println("\n========== CANCEL BOOKING ==========");
+    private Facility readFacility(SortedArrayList<Facility> facilityList) {
+        System.out.println("\nAvailable Facilities:");
 
-        User currentUser = userControl.getCurrentUser();
-        String userId;
-
-        if (currentUser != null) {
-            System.out.println("Current User: " + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
-            String useCurrent = askYesNo("Cancel booking for current user? (Y/N): ");
-
-            if (useCurrent.equalsIgnoreCase("Y")) {
-                userId = currentUser.getUserId();
-            } else {
-                System.out.print("Enter User ID: ");
-                userId = scanner.nextLine().trim();
-            }
-        } else {
-            System.out.print("Enter User ID: ");
-            userId = scanner.nextLine().trim();
+        for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
+            Facility facility = facilityList.getEntry(i);
+            System.out.printf("%2d. %-30s %-30s %s%n",
+                    i,
+                    facility.getFacilityName(),
+                    facility.getRoomType(),
+                    facility.getRoomName());
         }
 
-        if (!bookingControl.isExistingUser(userId)) {
-            System.out.println("User ID does not exist.");
-            return;
-        }
+        System.out.print("Select facility: ");
+        int choice = readChoice(1, facilityList.getNumberOfEntries());
 
-        System.out.println(bookingControl.displayBookingsByUser(userId));
-
-        System.out.print("Enter Booking ID to cancel: ");
-        String bookingId = scanner.nextLine().trim().toUpperCase();
-
-        String confirm = askYesNo("Confirm cancel booking? (Y/N): ");
-
-        if (confirm.equalsIgnoreCase("Y")) {
-            boolean cancelled = bookingControl.cancelBookingByUser(bookingId, userId);
-
-            if (cancelled) {
-                System.out.println("Booking cancelled successfully.");
-            } else {
-                System.out.println("Failed to cancel booking. Booking may not exist or does not belong to the user.");
-            }
-        } else {
-            System.out.println("Cancel operation aborted.");
-        }
+        return facilityList.getEntry(choice);
     }
 
     private int readChoice(int min, int max) {

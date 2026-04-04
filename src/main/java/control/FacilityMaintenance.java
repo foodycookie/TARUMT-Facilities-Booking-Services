@@ -9,9 +9,10 @@ import entity.Facility;
  *
  * <p><b>Facility ID format:</b>
  * <ul>
- *   <li>L001, L002, … — Library Discussion Room / Individual Study Room</li>
- *   <li>C001, C002, … — Cyber Centre Discussion Room</li>
+ *   <li>C001, C002, … — Cyber Centre</li>
+ *   <li>L001, L002, … — Library (Discussion Rooms &amp; Individual Study Rooms)</li>
  *   <li>S001, S002, … — Sports Facilities</li>
+ *   <li>O001, O002, … — Other (miscellaneous facilities)</li>
  * </ul>
  * Each prefix group maintains its own independent counter, so adding a Cyber
  * room never bumps the Library sequence, and vice-versa.
@@ -34,8 +35,8 @@ import entity.Facility;
  * alphabetically — exploiting the sorted order to avoid unnecessary comparisons.
  * This is the same pattern used in {@code TimeslotMaintenance.findTimeslotById()}.
  *
- * @author (facility module)
  */
+
 public class FacilityMaintenance {
 
     // ------------------------------------------------------------------ //
@@ -45,14 +46,17 @@ public class FacilityMaintenance {
     /** Relative path to the binary data file for facilities. */
     private static final String FACILITY_FILE = "data/facilities.dat";
 
-    /** Prefix for Library Discussion Room and Individual Study Room. */
+    /** Prefix for Library (Discussion Rooms and Individual Study Rooms). */
     public static final String PREFIX_LIBRARY = "L";
 
-    /** Prefix for Cyber Centre Discussion Room. */
+    /** Prefix for Cyber Centre. */
     public static final String PREFIX_CYBER   = "C";
 
     /** Prefix for Sports Facilities. */
     public static final String PREFIX_SPORTS  = "S";
+
+    /** Prefix for Other / miscellaneous facilities. */
+    public static final String PREFIX_OTHER   = "O";
 
     /** Zero-pad width for the numeric portion of an ID, e.g. 001. */
     private static final int ID_PAD_WIDTH = 3;
@@ -193,7 +197,8 @@ public class FacilityMaintenance {
      * <ul>
      *   <li>Name contains {@code "cyber"}  → {@code "C"}</li>
      *   <li>Name contains {@code "sport"}  → {@code "S"}</li>
-     *   <li>Anything else (Library / Study) → {@code "L"}</li>
+     *   <li>Name equals   {@code "other"}  → {@code "O"}</li>
+     *   <li>Anything else (Library)        → {@code "L"}</li>
      * </ul>
      *
      * @param facilityName the facility category name entered by the user
@@ -202,8 +207,9 @@ public class FacilityMaintenance {
     public String resolvePrefixFor(String facilityName) {
         if (facilityName == null) return PREFIX_LIBRARY;
         String lower = facilityName.toLowerCase();
-        if (lower.contains("cyber"))  return PREFIX_CYBER;
-        if (lower.contains("sport"))  return PREFIX_SPORTS;
+        if (lower.contains("cyber"))     return PREFIX_CYBER;
+        if (lower.contains("sport"))     return PREFIX_SPORTS;
+        if (lower.equals("other"))       return PREFIX_OTHER;
         return PREFIX_LIBRARY;
     }
 
@@ -247,7 +253,7 @@ public class FacilityMaintenance {
 
     /**
      * Validates that a facility ID string matches the expected format:
-     * one letter prefix (L / C / S) followed by digits.
+     * one letter prefix (L / C / S / O) followed by digits.
      *
      * @param facilityId the ID to validate
      * @return {@code true} if the format is correct
@@ -257,7 +263,8 @@ public class FacilityMaintenance {
         String prefix = facilityId.substring(0, 1);
         if (!prefix.equals(PREFIX_LIBRARY)
                 && !prefix.equals(PREFIX_CYBER)
-                && !prefix.equals(PREFIX_SPORTS)) {
+                && !prefix.equals(PREFIX_SPORTS)
+                && !prefix.equals(PREFIX_OTHER)) {
             return false;
         }
         try {

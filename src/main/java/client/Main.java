@@ -1,6 +1,6 @@
 package client;
 
-import boundary.UserMaintenanceUI;
+import boundary.UserAdminMaintenanceUI;
 import boundary.FacilityMaintenanceUI;
 import control.BookingMaintenance;
 import utility.Validation;
@@ -15,7 +15,7 @@ public class Main {
 
         do {
             System.out.println("\n========== MAIN MENU ==========");
-            System.out.println("1. USER MANAGEMENT");
+            System.out.println("1. USER AND ADMIN MANAGEMENT");
             System.out.println("2. FACILITY MANAGEMENT");
             System.out.println("3. BOOKING");
             System.out.println("4. TIME SLOT");
@@ -25,7 +25,7 @@ public class Main {
            
             switch (choice) {
                 case 1 :
-                    UserMaintenanceUI UserUi = new UserMaintenanceUI();
+                    UserAdminMaintenanceUI UserUi = new UserAdminMaintenanceUI();
                     UserUi.start();
                     
                 case 2 :

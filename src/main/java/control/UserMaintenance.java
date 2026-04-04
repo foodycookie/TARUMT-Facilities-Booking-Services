@@ -3,6 +3,7 @@ package control;
 import adt.SortedArrayList;
 import dao.UserDAO;
 import entity.User;
+import utility.Validation;
 
 /**
  *
@@ -24,23 +25,6 @@ public class UserMaintenance {
 
     public int getNumberOfUsers() {
         return userList.getNumberOfEntries();
-    }
-
-    public boolean isValidStudentId(String id) {
-        return id != null && id.matches("\\d{2}[A-Z]{3}\\d{5}");
-    }
-
-    public boolean isValidStaffId(String id) {
-        return id != null && id.matches("P\\d{4}");
-    }
-
-    public boolean isValidUserName(String name) {
-        return name != null && !name.trim().isEmpty();
-    }
-
-    public boolean isValidRole(String role) {
-        return role != null &&
-               (role.equalsIgnoreCase("Student") || role.equalsIgnoreCase("Staff"));
     }
 
     public String generateUserId() {
@@ -102,16 +86,16 @@ public class UserMaintenance {
             return false;
         }
 
-        if (!isValidUserName(user.getUserName()) || !isValidRole(user.getRole())) {
+        if (!Validation.isValidUserName(user.getUserName()) || !Validation.isValidRole(user.getRole())) {
             return false;
         }
 
         if (user.getRole().equalsIgnoreCase("Student")) {
-            if (!isValidStudentId(user.getRoleId())) {
+            if (!Validation.isValidStudentId(user.getRoleId())) {
                 return false;
             }
         } else if (user.getRole().equalsIgnoreCase("Staff")) {
-            if (!isValidStaffId(user.getRoleId())) {
+            if (!Validation.isValidStaffId(user.getRoleId())) {
                 return false;
             }
         }
@@ -136,16 +120,16 @@ public class UserMaintenance {
             return false;
         }
 
-        if (!isValidUserName(newUserName) || !isValidRole(newRole)) {
+        if (!Validation.isValidUserName(newUserName) || !Validation.isValidRole(newRole)) {
             return false;
         }
 
         if (newRole.equalsIgnoreCase("Student")) {
-            if (!isValidStudentId(newRoleId)) {
+            if (!Validation.isValidStudentId(newRoleId)) {
                 return false;
             }
         } else if (newRole.equalsIgnoreCase("Staff")) {
-            if (!isValidStaffId(newRoleId)) {
+            if (!Validation.isValidStaffId(newRoleId)) {
                 return false;
             }
         }

@@ -2,85 +2,122 @@ package entity;
 
 import java.io.Serializable;
 
-    public class Booking implements Serializable, Comparable<Booking> {
+/**
+ * Booking Entity (POJO)
+ * Clean, assignment-compliant, and ready for SortedArrayList.
+ */
+public class Booking implements Serializable, Comparable<Booking> {
 
-        private int bookingID;
-        private int userID;
-        private int facilityID;
-        private String date;        // Format: YYYY-MM-DD
-        private String timeSlot;    // Format: HH:MM-HH:MM
+    private String bookingID;     // e.g., "B000001"
+    private String userID;        // e.g., "22ABC12345" or "P1234"
+    private String facilityID;    // e.g., "101"
+    private String facilityName;
+    private String roomType;
+    private String roomName;
+    private String date;          // Format: YYYY-MM-DD
+    private String timeSlot;      // Format: HH:MM-HH:MM
 
-        // Default constructor
-        public Booking() {}
+    // Default constructor (required for file deserialization)
+    public Booking() {}
 
-        // Full constructor
-        public Booking(int bookingID, int userID, int facilityID, String date, String timeSlot) {
-            this.bookingID = bookingID;
-            this.userID = userID;
-            this.facilityID = facilityID;
-            this.date = date;
-            this.timeSlot = timeSlot;
-        }
+    // Full constructor
+    public Booking(String bookingID, String userID,
+               Facility facility,
+               String date, String timeSlot) {
 
-        // Getters & Setters
-        public int getBookingID() { return bookingID; }
-        public void setBookingID(int bookingID) { this.bookingID = bookingID; }
+        this.bookingID = bookingID;
+        this.userID = userID;
+        this.facilityID = facility.getFacilityId();
+        this.facilityName = facility.getFacilityName();
+        this.roomType = facility.getRoomType();
+        this.roomName = facility.getRoomName();
+        this.date = date;
+        this.timeSlot = timeSlot;
+}
 
-        public int getUserID() { return userID; }
-        public void setUserID(int userID) { this.userID = userID; }
+    // ====================== Getters & Setters ======================
+    public String getBookingID() { return bookingID; }
+    public void setBookingID(String bookingID) { this.bookingID = bookingID; }
 
-        public int getFacilityID() { return facilityID; }
-        public void setFacilityID(int facilityID) { this.facilityID = facilityID; }
+    public String getUserID() { return userID; }
+    public void setUserID(String userID) { this.userID = userID; }
 
-        public String getDate() { return date; }
-        public void setDate(String date) { this.date = date; }
+    public String getFacilityID() { return facilityID; }
+    public void setFacilityID(String facilityID) { this.facilityID = facilityID; }
 
-        public String getTimeSlot() { return timeSlot; }
-        public void setTimeSlot(String timeSlot) { this.timeSlot = timeSlot; }
+    public String getFacilityName() { return facilityName; }
+    public void setFacilityName(String facilityName) { this.facilityName = facilityName; }
 
-        // hashCode (based on unique ID)
-        @Override
-        public int hashCode() {
-            return Integer.hashCode(bookingID);
-        }
+    public String getRoomType() { return roomType; }
+    public void setRoomType(String roomType) { this.roomType = roomType; }
 
-        // equals (IMPORTANT: based on bookingID ONLY)
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (obj == null || getClass() != obj.getClass()) return false;
+    public String getRoomName() { return roomName; }
+    public void setRoomName(String roomName) { this.roomName = roomName; }
 
-            Booking other = (Booking) obj;
-            return this.bookingID == other.bookingID;
-        }
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
 
-        // compareTo (CRITICAL for SortedArrayList)
-        @Override
-        public int compareTo(Booking other) {
+    public String getTimeSlot() { return timeSlot; }
+    public void setTimeSlot(String timeSlot) { this.timeSlot = timeSlot; }
 
-            // 1. Sort by date
-            int dateCompare = this.date.compareTo(other.date);
-            if (dateCompare != 0) {
-                return dateCompare;
-            }
+    // ====================== Critical Methods ======================
 
-            // 2. Then by time slot
-            int timeCompare = this.timeSlot.compareTo(other.timeSlot);
-            if (timeCompare != 0) {
-                return timeCompare;
-            }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Booking other = (Booking) obj;
+        return this.bookingID.equals(other.bookingID);   // Compare by bookingID
+    }
 
-            // 3. Finally by bookingID (to avoid duplicates issue)
-            return Integer.compare(this.bookingID, other.bookingID);
-        }
+    @Override
+    public int hashCode() {
+        return bookingID.hashCode();
+    }
 
-        // toString (clean for report)
-        @Override
-        public String toString() {
-            return bookingID + "\t" +
-                   userID + "\t" +
-                   facilityID + "\t" +
-                   date + "\t" +
-                   timeSlot;
-        }
+    /**
+     * compareTo() for SortedArrayList - Sorting order: Date → TimeSlot → BookingID
+     */
+    @Override
+    public int compareTo(Booking other) {
+        if (other == null) return 1;
+
+        // 1. Primary: Date
+        int dateCompare = this.date.compareTo(other.date);
+        if (dateCompare != 0) return dateCompare;
+
+        // 2. Secondary: TimeSlot
+        int timeCompare = this.timeSlot.compareTo(other.timeSlot);
+        if (timeCompare != 0) return timeCompare;
+
+        // 3. Tertiary: BookingID
+        return this.bookingID.compareTo(other.bookingID);
+    }
+
+    // ====================== Display Methods ======================
+
+    @Override
+    public String toString() {
+        return String.format("B%s | User:%s | %s | %s | %s | %s",
+                bookingID, userID, roomName, date, timeSlot, facilityName);
+    }
+
+    /**
+     * Nice formatted row for displayAllBookings()
+     */
+    public String toTableRow() {
+        return String.format("%-10s %-12s %-25s %-12s %-15s",
+                bookingID,
+                userID,
+                roomName != null ? roomName : "N/A",
+                date,
+                timeSlot);
+    }
+
+    /**
+     * Short summary for reports
+     */
+    public String toSummary() {
+        return "Booking " + bookingID + " - " + roomName + " on " + date + " (" + timeSlot + ")";
+    }
 }

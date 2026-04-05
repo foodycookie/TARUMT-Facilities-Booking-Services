@@ -3,6 +3,7 @@ package client;
 import adt.SortedArrayList;
 import boundary.TimeslotMaintenanceUI;
 import boundary.UserAdminMaintenanceUI;
+import boundary.MainMenuUI;
 import control.AdminMaintenance;
 import control.FacilityMaintenance;
 import control.UserMaintenance;
@@ -46,7 +47,12 @@ public class Main {
         SortedArrayList<Facility> facilityList = facilityMaintenance.getAllFacilities();
         
         
-        timeslotMaintenanceUI.mainMenuForAdmin(facilityList, "A001", "Admin Test Hi");
+//        timeslotMaintenanceUI.mainMenuForAdmin(facilityList, "A001", "Admin Test Hi");
+        
+        
+        
+        MainMenuUI mainMenu = new MainMenuUI();
+        mainMenu.start();
         
 
         }

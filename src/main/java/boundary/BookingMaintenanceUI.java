@@ -18,12 +18,17 @@ import java.util.Scanner;
 
 public class BookingMaintenanceUI {
     private final Scanner scanner = new Scanner(System.in);
-    private final BookingMaintenance bookingControl = new BookingMaintenance();
     private final FacilityMaintenance facilityControl = new FacilityMaintenance();
-    private TimeslotMaintenance timeslotControl = new TimeslotMaintenance();
+    private final TimeslotMaintenance timeslotControl;
+    private final BookingMaintenance bookingControl;
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+
+    public BookingMaintenanceUI(TimeslotMaintenance timeslotControl) {
+        this.timeslotControl = timeslotControl;
+        this.bookingControl = new BookingMaintenance(timeslotControl);
+    }
 
     public void start() {
         int choice;
@@ -97,10 +102,6 @@ public class BookingMaintenanceUI {
         );
 
         if (booked) {
-            SortedArrayList<Timeslot> refreshedList =
-            timeslotControl.getTimeslotsForOneFacility(chosenFacility, selectedDate);
-            
-            timeslotControl = new TimeslotMaintenance();
         }
     }
 
@@ -130,7 +131,6 @@ public class BookingMaintenanceUI {
             boolean cancelled = bookingControl.cancelCurrentUserBooking(bookingId);
 
             if (cancelled) {
-                timeslotControl.reloadFromFile();
                 System.out.println("Booking cancelled successfully.");
             } else {
                 System.out.println("Failed to cancel booking.");
@@ -220,7 +220,7 @@ public class BookingMaintenanceUI {
 
         for (int i = 1; i <= facilityList.getNumberOfEntries(); i++) {
             Facility facility = facilityList.getEntry(i);
-            System.out.printf("%2d. %-30s %-30s %s%n",
+            System.out.printf("%2d. %-30s %-60s %s%n",
                     i,
                     facility.getFacilityName(),
                     facility.getRoomType(),

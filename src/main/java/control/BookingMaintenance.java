@@ -18,8 +18,8 @@ public class BookingMaintenance {
     private SortedArrayList<Booking> bookingList;
     private TimeslotMaintenance timeslotControl;
 
-    public BookingMaintenance() {
-        timeslotControl = new TimeslotMaintenance();
+    public BookingMaintenance(TimeslotMaintenance timeslotControl) {
+        this.timeslotControl = timeslotControl;
         bookingList = retrieveFromFile();
     }
 
@@ -117,8 +117,6 @@ public class BookingMaintenance {
         if (!slotBooked) {
             return false;
         }
-        
-        timeslotControl = new TimeslotMaintenance();
 
         Booking newBooking = new Booking(
                 bookingId,
@@ -137,7 +135,7 @@ public class BookingMaintenance {
             return false;
         }
     }
-
+    
     public boolean cancelCurrentUserBooking(String bookingId) {
         User currentUser = UserMaintenance.currentUser;
 
@@ -155,16 +153,33 @@ public class BookingMaintenance {
             return false;
         }
 
+        // Release the booked timeslot first
+        boolean released = timeslotControl.releaseSlotByTimeslotId(booking.getTimeSlotId());
+
+        if (!released) {
+            return false;
+        }
+
+        // Only remove booking record after timeslot is successfully released
         boolean removed = bookingList.remove(booking);
 
         if (!removed) {
+            Timeslot slot = timeslotControl.findTimeslotById(booking.getTimeSlotId());
+
+            if (slot != null && slot.isAvailable()) {
+                timeslotControl.bookOneTimeslot(
+                        slot.getTimeslotId(),
+                        booking.getBookingID(),
+                        booking.getUserID(),
+                        UserMaintenance.currentUser != null ? UserMaintenance.currentUser.getUserName() : ""
+                );
+            }
+
             return false;
         }
 
         saveToFile();
-
-        timeslotControl.reloadFromFile();
-        return timeslotControl.releaseSlotByTimeslotId(booking.getTimeSlotId());
+        return true;
     }
 
     public String displayCurrentUserBookings() {

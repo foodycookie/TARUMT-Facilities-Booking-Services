@@ -27,7 +27,7 @@ public class UserAdminMaintenanceUI {
             System.out.println("\n========== MAIN MENU ==========");
             System.out.println("1. User");
             System.out.println("2. Admin");
-            System.out.println("0. Exit");
+            System.out.println("0. Back");
             System.out.print("Choose your role: ");
             choice = readChoice(0, 2);
 

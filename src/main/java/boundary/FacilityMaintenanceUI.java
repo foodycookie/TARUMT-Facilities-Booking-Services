@@ -42,36 +42,60 @@ public class FacilityMaintenanceUI {
         roomTypesOtherList.add("Other");
     }
 
-    public void start() {
+    public void startForAdmin(String adminId, String adminName) {
         int choice;
 
         do {
-            printSectionHeader("FACILITY MANAGEMENT MENU");
+            printSectionHeader("FACILITY MANAGEMENT  [Admin: " + adminName
+                    + " | " + adminId + "]");
             System.out.println("  1. Display All Facilities");
             System.out.println("  2. Add Facility");
             System.out.println("  3. Search Facility");
             System.out.println("  4. Update Facility");
             System.out.println("  5. Delete Facility");
-            System.out.println("  0. Exit");
+            System.out.println("  6. Facility Report");
+            System.out.println("  0. Back");
             printDivider();
             System.out.print("  Enter choice: ");
             choice = readInt();
 
             switch (choice) {
-                case 1 -> displayAllFacilities();
+                case 1 -> displayAllFacilitiesForAdmin();
                 case 2 -> addFacility();
                 case 3 -> searchFacility();
                 case 4 -> updateFacility();
                 case 5 -> deleteFacility();
-                case 0 -> System.out.println("\n  Exiting Facility Management Module...");
+                case 0 -> System.out.println("\n  Returning to Main Menu...");
                 default -> System.out.println("\n  [!!] Invalid choice. Please try again.");
             }
         } while (choice != 0);
     }
 
-    private void displayAllFacilities() {
+    public void startForUser(String userId, String userName) {
         int choice;
 
+        do {
+            printSectionHeader("FACILITY MANAGEMENT  [User: " + userName
+                    + " | " + userId + "]");
+            System.out.println("  1. Display All Facilities");
+            System.out.println("  2. Search Facility");
+            System.out.println("  0. Back");
+            printDivider();
+            System.out.print("  Enter choice: ");
+            choice = readInt();
+
+            switch (choice) {
+                case 1 -> displayAllFacilitiesForUser();
+                case 2 -> searchFacility();
+                case 0 -> System.out.println("\n  Returning to Main Menu...");
+                default -> System.out.println("\n  [!!] Invalid choice. Please try again.");
+            }
+        } while (choice != 0);
+    }
+
+    private void displayAllFacilitiesForAdmin() {
+        int choice;
+ 
         do {
             System.out.println(facilityMaintenance.displayAllFacilities());
             System.out.println("  1. Add Facility");
@@ -80,7 +104,7 @@ public class FacilityMaintenanceUI {
             System.out.println("  4. Back");
             System.out.print("  Enter choice: ");
             choice = readInt();
-
+ 
             switch (choice) {
                 case 1 -> addFacility();
                 case 2 -> updateFacility();
@@ -89,6 +113,15 @@ public class FacilityMaintenanceUI {
                 default -> System.out.println("\n  [!!] Invalid choice. Please try again.");
             }
         } while (choice != 4);
+    }
+ 
+    private void displayAllFacilitiesForUser() {
+        System.out.println(facilityMaintenance.displayAllFacilities());
+ 
+        System.out.println("  1. Back");
+        System.out.print("  Enter choice: ");
+        readInt();
+        System.out.println("\n  Returning to main menu...");
     }
 
     private void addFacility() {

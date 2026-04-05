@@ -35,8 +35,8 @@ public class TimeslotMaintenanceUI {
     private final AdminMaintenance adminMaintenance;
     private final Scanner scanner;
 
-    public TimeslotMaintenanceUI() {
-        this.timeslotMaintenance = new TimeslotMaintenance();
+    public TimeslotMaintenanceUI(TimeslotMaintenance timeslotMaintenance) {
+        this.timeslotMaintenance = timeslotMaintenance;
         this.facilityMaintenance = new FacilityMaintenance();
         this.adminMaintenance = new AdminMaintenance();
         this.userMaintenance = new UserMaintenance();
@@ -316,23 +316,25 @@ public class TimeslotMaintenanceUI {
             }
             
             System.out.println("\nAll slots for: " + facility.getRoomName());
-            System.out.printf("%-4s %-10s %-10s %-12s %-15s%n", "No.", "Start", "End", "Status", "Blocked By");
+            System.out.printf("%-4s %-10s %-10s %-12s %-15s %-15s%n", "No.", "Start", "End", "Status", "Booked By", "Blocked By");
 
             for (int i = 1; i <= availableTimeslot.getNumberOfEntries(); i++) {
                 Timeslot timeslot = availableTimeslot.getEntry(i);
-                String by = timeslot.getBlockedByName()!= null ? timeslot.getBlockedByName() : "-";
+                String bookedBy = timeslot.getBookedByName()!= null ? timeslot.getBookedByName() : "-";
+                String blockedBy = timeslot.getBlockedByName()!= null ? timeslot.getBlockedByName() : "-";
                 String status = switch (timeslot.getStatus()) {
                     case BOOKED -> "[BOOKED]";
                     case BLOCKED -> "[BLOCKED]";
                     default -> "[AVAILABLE]";
                 };
 
-                System.out.printf("%-4d %-10s %-10s %-12s %-15s%n",
+                System.out.printf("%-4d %-10s %-10s %-12s %-15s %-15s%n",
                         i,
                         timeslot.getStartTime().format(TIME_FORMAT),
                         timeslot.getEndTime().format(TIME_FORMAT),
                         status,
-                        by);
+                        bookedBy,
+                        blockedBy);
             }
 
             System.out.println("Total: " + availableTimeslot.getNumberOfEntries() + " slot(s)");

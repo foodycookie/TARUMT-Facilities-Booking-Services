@@ -3,6 +3,7 @@ package boundary;
 import adt.SortedArrayList;
 import control.AdminMaintenance;
 import control.FacilityMaintenance;
+import control.TimeslotMaintenance;
 import control.UserMaintenance;
 import entity.Admin;
 import entity.Facility;
@@ -15,15 +16,15 @@ import java.util.Scanner;
 
 public class MainMenuUI {
     private final Scanner scanner = new Scanner(System.in);
-
-    private final FacilityMaintenanceUI facilityUI = new FacilityMaintenanceUI();
-    private final TimeslotMaintenanceUI timeslotUI = new TimeslotMaintenanceUI();
-    private final BookingMaintenanceUI bookingUI = new BookingMaintenanceUI();
-
+    
     private final UserMaintenance userControl = new UserMaintenance();
     private final AdminMaintenance adminControl = new AdminMaintenance();
     private final FacilityMaintenance facilityControl = new FacilityMaintenance();
+    TimeslotMaintenance sharedTimeslot = new TimeslotMaintenance();
     
+    private final FacilityMaintenanceUI facilityUI = new FacilityMaintenanceUI();
+    private final TimeslotMaintenanceUI timeslotUI = new TimeslotMaintenanceUI(sharedTimeslot);
+    private final BookingMaintenanceUI bookingUI   = new BookingMaintenanceUI(sharedTimeslot);
     private final UserAdminMaintenanceUI userAdminUI = new UserAdminMaintenanceUI(userControl, adminControl);
 
     public void start() {
@@ -47,7 +48,7 @@ public class MainMenuUI {
 
             switch (choice) {
                 case 1 -> userAdminUI.start();
-                case 2 -> facilityUI.start();
+                case 2 -> openFacilityModule();
                 case 3 -> openTimeslotModule();
                 case 4 -> openBookingModule();
                 case 5 -> logout();
@@ -69,6 +70,25 @@ public class MainMenuUI {
                     + currentUser.getUserName() + " (" + currentUser.getUserId() + ")");
         } else {
             System.out.println("Current Login: None");
+        }
+    }
+    
+    private void openFacilityModule() {
+        Admin currentAdmin = adminControl.getCurrentAdmin();
+        User currentUser = userControl.getCurrentUser();
+        
+               if (currentAdmin != null) {
+            facilityUI.startForAdmin(
+                    currentAdmin.getAdminId(),
+                    currentAdmin.getAdminName()
+            );
+        } else if (currentUser != null) {
+            facilityUI.startForUser(
+                currentUser.getUserId(),
+                currentUser.getUserName()
+            );
+        } else {
+            System.out.println("\nPlease select a current User or Admin first in User / Admin Module.");
         }
     }
 

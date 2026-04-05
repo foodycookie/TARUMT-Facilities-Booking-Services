@@ -290,17 +290,9 @@ public class TimeslotMaintenanceUI {
             }
 
             System.out.println("Total: " + availableTimeslot.getNumberOfEntries() + " slot(s)");
-
-            System.out.println("Actions:");
-            System.out.println("1. Book a slot");
-            System.out.println("0. Back");
-
-            int actionSelection = readInt("\nSelect action: ", 0, 1);
-
-            switch (actionSelection) {
-                // case 1 -> menuBookForChosenFacility(facility, availableTimeslot, userId, userName);
-                case 0 -> browsing = false;
-            }
+            
+            pause();
+            return;
         }
     }
     

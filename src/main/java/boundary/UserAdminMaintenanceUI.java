@@ -266,6 +266,7 @@ public class UserAdminMaintenanceUI {
                     if (updated) {
                         System.out.println("User profile updated successfully.");
                         currentUser = userControl.findUserByUserId(currentUser.getUserId());
+                        UserMaintenance.currentUser = currentUser;
                     } else {
                         System.out.println("Failed to update user profile.");
                     }
@@ -300,6 +301,7 @@ public class UserAdminMaintenanceUI {
                     if (updated) {
                         System.out.println("Admin profile updated successfully.");
                         currentAdmin = adminControl.findAdminByAdminId(currentAdmin.getAdminId());
+                        AdminMaintenance.currentAdmin = currentAdmin;
                     } else {
                         System.out.println("Failed to update admin profile.");
                     }

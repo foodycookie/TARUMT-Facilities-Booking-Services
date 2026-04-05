@@ -5,11 +5,13 @@ import adt.SortedListInterface;
 import entity.Booking;
 import java.io.*;
 
-public class BookingDAO {
+/*
+ * Lai Yu Hui
+*/
 
+public class BookingDAO {
     private String fileName = "src/main/resources/bookings.dat";
 
-    // SAVE TO FILE
     public void saveToFile(SortedListInterface<Booking> bookingList) {
 
         File file = new File(fileName);
@@ -25,7 +27,6 @@ public class BookingDAO {
         }
     }
 
-    // LOAD FROM FILE
     public SortedListInterface<Booking> retrieveFromFile() {
 
         File file = new File(fileName);
@@ -33,7 +34,7 @@ public class BookingDAO {
         SortedListInterface<Booking> bookingList = new SortedArrayList<>();
 
         if (!file.exists()) {
-            return bookingList; // return empty list if file not exist
+            return bookingList;
         }
 
         try (ObjectInputStream oiStream = new ObjectInputStream(new FileInputStream(file))) {

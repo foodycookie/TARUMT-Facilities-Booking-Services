@@ -10,15 +10,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Lai Yu Hui
  */
+
 public class BookingMaintenance {
-
     private static final String BOOKING_FILE = "src/main/resources/booking.dat";
-
     private SortedArrayList<Booking> bookingList;
-
     private TimeslotMaintenance timeslotControl;
 
     public BookingMaintenance() {

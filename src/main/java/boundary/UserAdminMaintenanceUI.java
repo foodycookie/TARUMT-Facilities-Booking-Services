@@ -7,14 +7,18 @@ import entity.User;
 import java.util.Scanner;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Tay Tiaan You
  */
 
 public class UserAdminMaintenanceUI {
     private final Scanner scanner = new Scanner(System.in);
-    private final UserMaintenance userControl = new UserMaintenance();
-    private final AdminMaintenance adminControl = new AdminMaintenance();
+    private final UserMaintenance userControl;
+    private final AdminMaintenance adminControl;
+
+    public UserAdminMaintenanceUI(UserMaintenance userControl, AdminMaintenance adminControl) {
+        this.userControl = userControl;
+        this.adminControl = adminControl;
+    }    
 
     public void start() {
         int choice;
@@ -30,7 +34,7 @@ public class UserAdminMaintenanceUI {
             switch (choice) {
                 case 1 -> userMenu();
                 case 2 -> adminMenu();
-                case 0 -> System.out.println("Exiting system...");
+                case 0 -> System.out.println("Returning to Main Menu..");
             }
         } while (choice != 0);
     }
@@ -177,30 +181,30 @@ public class UserAdminMaintenanceUI {
         System.out.println("\n=========== SELECT USER ===========");
         System.out.print("Enter your User ID: ");
         String userId = scanner.nextLine().trim();
-
-        User currentUser = userControl.findUserByUserId(userId);
-
-        if (currentUser == null) {
+        
+        boolean selected = userControl.selectCurrentUser(userId);
+        
+        if (!selected) {
             System.out.println("User not found.");
             return;
         }
+
+        User currentUser = UserMaintenance.currentUser;
 
         int choice;
         do {
             System.out.println("\n============= " + currentUser.getUserName() + " =============");
             System.out.println("1. Profile");
-            System.out.println("2. Booking");
             System.out.println("0. Back");
             System.out.print("Enter choice: ");
             choice = readChoice(0, 2);
 
             switch (choice) {
                 case 1 -> userProfileMenu(currentUser);
-                case 2 -> userBookingPlaceholder(currentUser);
                 case 0 -> System.out.println("Returning to User Menu...");
             }
 
-            currentUser = userControl.findUserByUserId(userId);
+            currentUser = UserMaintenance.currentUser   ;
         } while (choice != 0);
     }
 
@@ -208,20 +212,21 @@ public class UserAdminMaintenanceUI {
         System.out.println("\n=========== SELECT ADMIN ===========");
         System.out.print("Enter your Admin ID: ");
         String adminId = scanner.nextLine().trim();
-
-        Admin currentAdmin = adminControl.findAdminByAdminId(adminId);
-
-        if (currentAdmin == null) {
+        
+        boolean selected = adminControl.selectCurrentAdmin(adminId);
+        
+        if (!selected) {
             System.out.println("Admin not found.");
             return;
         }
+
+        Admin currentAdmin = AdminMaintenance.currentAdmin;
 
         int choice;
         do {
             System.out.println("\n============= " + currentAdmin.getAdminName() + " =============");
             System.out.println("1. Profile");
             System.out.println("2. Manage User");
-            System.out.println("3. Booking");
             System.out.println("0. Back");
             System.out.print("Enter choice: ");
             choice = readChoice(0, 3);
@@ -229,11 +234,10 @@ public class UserAdminMaintenanceUI {
             switch (choice) {
                 case 1 -> adminProfileMenu(currentAdmin);
                 case 2 -> adminManageUserMenu();
-                case 3 -> adminBookingPlaceholder(currentAdmin);
                 case 0 -> System.out.println("Returning to Admin Menu...");
             }
 
-            currentAdmin = adminControl.findAdminByAdminId(adminId);
+            currentAdmin = AdminMaintenance.currentAdmin;
         } while (choice != 0);
     }
 
@@ -386,20 +390,6 @@ public class UserAdminMaintenanceUI {
         } else {
             System.out.println("Delete cancelled.");
         }
-    }
-
-    private void userBookingPlaceholder(User currentUser) {
-        System.out.println("\n[Booking module placeholder]");
-        System.out.println("Current User ID: " + currentUser.getUserId());
-        System.out.println("Current User Name: " + currentUser.getUserName());
-        System.out.println("Merge your friend's booking UI/control here.");
-    }
-
-    private void adminBookingPlaceholder(Admin currentAdmin) {
-        System.out.println("\n[Booking module placeholder]");
-        System.out.println("Current Admin ID: " + currentAdmin.getAdminId());
-        System.out.println("Current Admin Name: " + currentAdmin.getAdminName());
-        System.out.println("Merge your friend's booking UI/control here.");
     }
 
     private int readChoice(int min, int max) {

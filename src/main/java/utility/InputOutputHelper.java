@@ -3,6 +3,10 @@ package utility;
 import adt.SortedArrayList;
 import java.util.Scanner;
 
+/**
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
+ */
+
 public class InputOutputHelper {
     public static final String FNAME_CYBER   = "Cyber Centre";
     public static final String FNAME_LIBRARY = "Library";
@@ -68,7 +72,7 @@ public class InputOutputHelper {
         }
 
         int value = scanner.nextInt();
-        scanner.nextLine(); // clear buffer
+        scanner.nextLine();
         return value; 
     }
 }

@@ -2,6 +2,10 @@ package entity;
 
 import java.io.Serializable;
 
+/*
+ * Tay Tian You
+*/
+
 public class Admin implements Comparable<Admin>, Serializable{
     private static final long serialVersionUID = 1L;
 
@@ -55,6 +59,5 @@ public class Admin implements Comparable<Admin>, Serializable{
     
     public boolean isAdmin() {
         return this.role.equalsIgnoreCase("Admin");
-    }
-    
+    }   
 }

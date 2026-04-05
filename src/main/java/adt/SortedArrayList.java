@@ -6,8 +6,7 @@ import java.util.Iterator;
 /**
  * We assumed the entries in the list have positions that begin with 1.
  * But in the array logic, it begins with 0.
- * @author
- * @param <T>
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
  */
 
 public class SortedArrayList<T extends Comparable<T>> implements SortedListInterface<T>, Serializable {

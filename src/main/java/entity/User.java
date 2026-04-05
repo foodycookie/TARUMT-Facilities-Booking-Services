@@ -3,8 +3,7 @@ package entity;
 import java.io.Serializable;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Tay Tian You
  */
 
 public class User implements Comparable<User>, Serializable {
@@ -62,4 +61,3 @@ public class User implements Comparable<User>, Serializable {
         return this.role.equalsIgnoreCase("User");
     }
 }
-

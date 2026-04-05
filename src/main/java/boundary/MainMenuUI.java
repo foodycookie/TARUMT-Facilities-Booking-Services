@@ -10,14 +10,12 @@ import entity.User;
 import java.util.Scanner;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
  */
-public class MainMenuUI {
 
+public class MainMenuUI {
     private final Scanner scanner = new Scanner(System.in);
 
-    private final UserAdminMaintenanceUI userAdminUI = new UserAdminMaintenanceUI();
     private final FacilityMaintenanceUI facilityUI = new FacilityMaintenanceUI();
     private final TimeslotMaintenanceUI timeslotUI = new TimeslotMaintenanceUI();
     private final BookingMaintenanceUI bookingUI = new BookingMaintenanceUI();
@@ -25,6 +23,8 @@ public class MainMenuUI {
     private final UserMaintenance userControl = new UserMaintenance();
     private final AdminMaintenance adminControl = new AdminMaintenance();
     private final FacilityMaintenance facilityControl = new FacilityMaintenance();
+    
+    private final UserAdminMaintenanceUI userAdminUI = new UserAdminMaintenanceUI(userControl, adminControl);
 
     public void start() {
         int choice;
@@ -38,17 +38,19 @@ public class MainMenuUI {
             System.out.println("2. Facility Module");
             System.out.println("3. Timeslot Module");
             System.out.println("4. Booking Module");
+            System.out.println("5. Logout");
             System.out.println("0. Exit");
             System.out.println("==================================================");
             System.out.print("Enter choice: ");
 
-            choice = readChoice(0, 4);
+            choice = readChoice(0, 5);
 
             switch (choice) {
                 case 1 -> userAdminUI.start();
                 case 2 -> facilityUI.start();
                 case 3 -> openTimeslotModule();
                 case 4 -> openBookingModule();
+                case 5 -> logout();
                 case 0 -> System.out.println("Exiting system...");
             }
 
@@ -117,5 +119,13 @@ public class MainMenuUI {
 
             System.out.print("Invalid choice. Enter " + min + " to " + max + ": ");
         }
+    }
+    
+    private void logout() {
+        UserMaintenance.currentUser = null;
+        AdminMaintenance.currentAdmin = null;
+
+        System.out.println("\nLogout successful.");
+        System.out.println("Current login cleared.");
     }
 }

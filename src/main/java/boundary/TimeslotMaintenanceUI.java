@@ -4,14 +4,21 @@ import adt.SortedArrayList;
 import control.AdminMaintenance;
 import control.FacilityMaintenance;
 import control.TimeslotMaintenance;
+import control.UserMaintenance;
+import entity.Admin;
 import entity.Facility;
 import entity.Timeslot;
+import entity.User;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.Scanner;
 import utility.InputOutputHelper;
+
+/*
+ * Ong Hao Howard
+*/
 
 public class TimeslotMaintenanceUI {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -24,6 +31,7 @@ public class TimeslotMaintenanceUI {
 
     private final TimeslotMaintenance timeslotMaintenance;
     private final FacilityMaintenance facilityMaintenance;
+    private final UserMaintenance userMaintenance;
     private final AdminMaintenance adminMaintenance;
     private final Scanner scanner;
 
@@ -31,6 +39,7 @@ public class TimeslotMaintenanceUI {
         this.timeslotMaintenance = new TimeslotMaintenance();
         this.facilityMaintenance = new FacilityMaintenance();
         this.adminMaintenance = new AdminMaintenance();
+        this.userMaintenance = new UserMaintenance();
         this.scanner = new Scanner(System.in);
     }
     
@@ -189,22 +198,22 @@ public class TimeslotMaintenanceUI {
 
             case 1 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_CYBER);
-                tableTitle = "Cyber Centre Room - " + date.format(DATE_FORMAT);
+                tableTitle = InputOutputHelper.FNAME_CYBER + " - " + date.format(DATE_FORMAT);
             }
             
             case 2 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_LIBRARY);
-                tableTitle = "Library Room - " + date.format(DATE_FORMAT);
+                tableTitle = InputOutputHelper.FNAME_LIBRARY + " - " + date.format(DATE_FORMAT);
             }
             
             case 3 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_SPORTS);
-                tableTitle = "Sports Facilities - " + date.format(DATE_FORMAT);
+                tableTitle = InputOutputHelper.FNAME_SPORTS + " - " + date.format(DATE_FORMAT);
             }
 
             case 4 -> {
                 targetFacilityList = facilityMaintenance.getFacilitiesByFacilityName(InputOutputHelper.FNAME_OTHER);
-                tableTitle = "Other - " + date.format(DATE_FORMAT);
+                tableTitle = InputOutputHelper.FNAME_OTHER + " - " + date.format(DATE_FORMAT);
             }
             
             case 5 -> {
@@ -235,20 +244,23 @@ public class TimeslotMaintenanceUI {
 
         Facility chosenFacility = displayedFacilityList.getEntry(roomSelection);
         
-//        if (adminMaintenance.hasCurrentAdmin()) {
-//            menuDisplayAllBlockForAdmin(chosenFacility, date, adminMaintenance.getCurrentAdmin().getAdminId(), adminMaintenance.getCurrentAdmin().getAdminId());
-//        }
-//        
-//        else {
-//            menuDisplayAllBlockForUser(chosenFacility, date);
-//        }
-
-        menuDisplayAllBlockForAdmin(chosenFacility, date, "69", "420");
-        // menuDisplayAllBlockForUser(chosenFacility, date);
-
+        Admin currentAdmin = adminMaintenance.getCurrentAdmin();
+        User currentUser = userMaintenance.getCurrentUser();
+        
+        if (currentAdmin != null) {
+            menuDisplayAllBlockForAdmin(chosenFacility, date, adminMaintenance.getCurrentAdmin().getAdminId(), adminMaintenance.getCurrentAdmin().getAdminName());
+        } 
+        
+        else if (currentUser != null) {
+            menuDisplayAllBlockForUser(chosenFacility, date, userMaintenance.getCurrentUser().getUserId(), userMaintenance.getCurrentUser().getUserId());
+        } 
+        
+        else {
+            System.out.println("\nPlease select a current User or Admin first in User / Admin Module.");
+        }
     }
     
-    private void menuDisplayAllBlockForUser(Facility facility, LocalDate date) {
+    private void menuDisplayAllBlockForUser(Facility facility, LocalDate date, String userId, String userName) {
         boolean browsing = true;
         
         while (browsing) {

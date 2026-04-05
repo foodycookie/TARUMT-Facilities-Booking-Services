@@ -3,127 +3,45 @@ package boundary;
 import adt.SortedArrayList;
 import control.FacilityMaintenance;
 import entity.Facility;
-import java.util.Iterator;
 import java.util.Scanner;
 
-/**
- * Boundary (UI) layer for the Facility module.
- *
- * <p><b>Facility ID format (auto-generated, never typed by user):</b>
- * <ul>
- *   <li>C001, C002, … — Cyber Centre Discussion Room</li>
- *   <li>L001, L002, … — Library Discussion Room / Individual Study Room</li>
- *   <li>S001, S002, … — Sports Facilities</li>
- * </ul>
- *
- * <p><b>Facility name selection flow:</b><br>
- * The top-level menu shows three categories plus an "Other" option that
- * redirects back to those same three — there is no free-text entry at the
- * category level. Choosing "Library Discussion Room / Individual Study Room"
- * opens a one-level sub-menu to distinguish between the two facility names
- * that share the L prefix.
- *
- * <p><b>Room type selection:</b><br>
- * Room types are <em>always</em> filtered by the currently selected facility
- * name. Choosing "Cyber Centre Discussion Room" will only ever present Cyber
- * room types; choosing "Sports Facilities" will only present sports court
- * types. This prevents nonsensical combinations such as a "Pickleball Court"
- * inside a Cyber Centre.
- *
- * <p><b>Structural conventions (consistent with UserMaintenanceUI):</b>
- * <ul>
- *   <li>One {@link Scanner} shared across the entire instance.</li>
- *   <li>One {@link FacilityMaintenance} control object.</li>
- *   <li>{@link #readInt()} guard prevents {@code InputMismatchException}.</li>
- *   <li>{@link #start()} is the entry point called from Main or a parent menu.</li>
- * </ul>
- *
- * @author (facility module)
- */
+/*
+ * Tiw Hong Xuan
+*/
+
 public class FacilityMaintenanceUI {
-
-    // ====================================================================== //
-    //  Fields                                                                 //
-    // ====================================================================== //
-
     private final Scanner            scanner            = new Scanner(System.in);
     private final FacilityMaintenance facilityMaintenance = new FacilityMaintenance();
 
-    // ====================================================================== //
-    //  Facility name constants                                                //
-    //  These are the exact strings stored in Facility.facilityName and used  //
-    //  by FacilityMaintenance.resolvePrefixFor() to derive the ID prefix.    //
-    // ====================================================================== //
-
-    /** Stored facilityName for the Cyber Centre category (prefix C). */
-    private static final String FNAME_CYBER   = "Cyber Centre Discussion Room";
-
-    /** Stored facilityName for Library discussion rooms (prefix L). */
-    private static final String FNAME_LIBRARY = "Library Discussion Room";
-
-    /** Stored facilityName for individual study rooms (prefix L). */
-    private static final String FNAME_STUDY   = "Individual Study Room";
-
-    /** Stored facilityName for sports courts (prefix S). */
+    private static final String FNAME_CYBER   = "Cyber Centre";
+    private static final String FNAME_LIBRARY = "Library";
     private static final String FNAME_SPORTS  = "Sports Facilities";
+    private static final String FNAME_OTHER   = "Other";
 
-    // ====================================================================== //
-    //  Room type option arrays — one per facility name                        //
-    //  Each array ends with an "Other" entry that lets the user type a        //
-    //  custom room type not covered by the predefined list.                   //
-    // ====================================================================== //
+    private static final SortedArrayList<String> roomTypesCyberList = new SortedArrayList<>();
+    private static final SortedArrayList<String> roomTypesLibraryList = new SortedArrayList<>();
+    private static final SortedArrayList<String> roomTypesSportsList = new SortedArrayList<>();
+    private static final SortedArrayList<String> roomTypesOtherList = new SortedArrayList<>();
 
-    /**
-     * Room types available under {@value #FNAME_CYBER}.
-     * Cyber Centre rooms are either standard (1 PC) or projector-equipped (2 PCs).
-     */
-    private static final String[] ROOM_TYPES_CYBER = {
-        "Discussion Room (1 PC)",
-        "Discussion Room with Projector (2 PCs)",
-        "Other (enter manually)"
-    };
+    static {
+        roomTypesCyberList.add("Discussion Room (1 PC)");
+        roomTypesCyberList.add("Discussion Room with Projector (2 PCs)");
+        roomTypesCyberList.add("Discussion Room with Projector (2 PCs) [HDMI]");
 
-    /**
-     * Room types available under {@value #FNAME_LIBRARY}.
-     * Library rooms range from basic discussion rooms to seminar and
-     * projector-equipped rooms.
-     */
-    private static final String[] ROOM_TYPES_LIBRARY = {
-        "Discussion Room (1 PC)",
-        "Discussion Room with Projector (2 PCs)",
-        "Seminar Room",
-        "Other (enter manually)"
-    };
+        roomTypesLibraryList.add("Discussion Room (1 PC)");
+        roomTypesLibraryList.add("Discussion Room with Projector (2 PCs)");
+        roomTypesLibraryList.add("Individual Study Room");
+        roomTypesLibraryList.add("Presentation Room");
 
-    /**
-     * Room types available under {@value #FNAME_STUDY}.
-     * Individual study rooms have a single standard type; more variants
-     * can be added here without touching any other class.
-     */
-    private static final String[] ROOM_TYPES_STUDY = {
-        "Individual Study Room",
-        "Other (enter manually)"
-    };
+        roomTypesSportsList.add("Badminton Court");
+        roomTypesSportsList.add("Basketball Court");
+        roomTypesSportsList.add("Pickleball Court");
+        roomTypesSportsList.add("Swimming Pool");
+        roomTypesSportsList.add("Volleyball Court");
 
-    /**
-     * Room types available under {@value #FNAME_SPORTS}.
-     * Each entry corresponds to a distinct court type at TARUMT.
-     */
-    private static final String[] ROOM_TYPES_SPORTS = {
-        "Pickleball Court",
-        "Badminton Court",
-        "Basketball Court",
-        "Other (enter manually)"
-    };
+        roomTypesOtherList.add("Other");
+    }
 
-    // ====================================================================== //
-    //  Entry point                                                            //
-    // ====================================================================== //
-
-    /**
-     * Launches the Facility Management main menu loop.
-     * Called from {@code Main} or a parent navigation class.
-     */
     public void start() {
         int choice;
 
@@ -151,14 +69,6 @@ public class FacilityMaintenanceUI {
         } while (choice != 0);
     }
 
-    // ====================================================================== //
-    //  1 — DISPLAY ALL                                                        //
-    // ====================================================================== //
-
-    /**
-     * Prints the full facility table then offers quick-action sub-options so
-     * the user does not have to return to the main menu for simple operations.
-     */
     private void displayAllFacilities() {
         int choice;
 
@@ -181,66 +91,42 @@ public class FacilityMaintenanceUI {
         } while (choice != 4);
     }
 
-    // ====================================================================== //
-    //  2 — ADD                                                                //
-    // ====================================================================== //
-
-    /**
-     * Guides the user through a three-step wizard to add a new facility:
-     * <ol>
-     *   <li>Choose facility name (top-level category → optional sub-category).</li>
-     *   <li>Choose room type — list is filtered to only show types valid for
-     *       the chosen facility name.</li>
-     *   <li>Enter room name / code (free text, e.g. "B002").</li>
-     * </ol>
-     * A preview is shown before saving and the user may re-enter all details,
-     * confirm and save, or cancel entirely.
-     *
-     * <p>The facility ID is auto-generated from the facility name:
-     * Cyber → C prefix, Library/Study → L prefix, Sports → S prefix.
-     */
     private void addFacility() {
         int choice;
 
         do {
             printSectionHeader("ADD FACILITY");
 
-            // ── Step 1: Facility Name ─────────────────────────────────────
             String facilityName = chooseFacilityName();
             if (facilityName == null) {
                 System.out.println("\n  Add facility cancelled.");
                 return;
             }
 
-            // ── Step 2: Room Type (contextual to the chosen facility name) ──
             String roomType = chooseRoomType(facilityName);
             if (roomType == null) {
                 System.out.println("\n  Add facility cancelled.");
                 return;
             }
 
-            // ── Step 3: Room Name / Code ───────────────────────────────────
             System.out.print("\n  Enter Room Name (e.g. B002, Pickleball Court 1): ");
             String roomName = scanner.nextLine().trim();
 
             if (!facilityMaintenance.isValidRoomName(roomName)) {
                 System.out.println("  [!!] Room name cannot be empty. Please try again.");
-                choice = 2; // force re-entry
+                choice = 2;
                 continue;
             }
 
-            // Duplicate check — O(log n) via SortedArrayList.contains() → binarySearch()
             if (facilityMaintenance.facilityExists(facilityName, roomType, roomName)) {
                 System.out.println("  [!!] A facility with the same details already exists.");
                 choice = 2;
                 continue;
             }
 
-            // Auto-generate ID — prefix is derived from facilityName
             String generatedId = facilityMaintenance.generateFacilityId(facilityName);
             Facility preview   = new Facility(generatedId, facilityName, roomType, roomName);
 
-            // ── Preview ────────────────────────────────────────────────────
             System.out.println();
             printDivider();
             System.out.println("  FACILITY PREVIEW");
@@ -261,7 +147,6 @@ public class FacilityMaintenanceUI {
                     if (facilityMaintenance.addFacility(preview)) {
                         System.out.println("\n  [OK] Facility added successfully. (ID: " + generatedId + ")");
 
-                        // Ask whether to add another facility immediately
                         int next;
                         do {
                             System.out.println("\n  1. Add Another Facility");
@@ -274,14 +159,14 @@ public class FacilityMaintenanceUI {
                         } while (next != 1 && next != 2);
 
                         if (next == 1) {
-                            addFacility(); // tail-recurse for a clean fresh start
+                            addFacility();
                         } else {
                             System.out.println("\n  Returning to main menu...");
                         }
                         return;
                     } else {
                         System.out.println("\n  [!!] Failed to add facility. Please try again.");
-                        choice = 2; // let the loop retry
+                        choice = 2;
                     }
                 }
                 case 2 -> System.out.println("\n  Please re-enter all facility details.");
@@ -294,18 +179,6 @@ public class FacilityMaintenanceUI {
         } while (choice == 2);
     }
 
-    // ====================================================================== //
-    //  3 — SEARCH                                                             //
-    // ====================================================================== //
-
-    /**
-     * Offers three search modes:
-     * <ol>
-     *   <li>By facility name keyword (partial match, linear scan).</li>
-     *   <li>By room name keyword (partial match, linear scan).</li>
-     *   <li>By exact facility ID (e.g. {@code L001}, {@code C002}).</li>
-     * </ol>
-     */
     private void searchFacility() {
         printSectionHeader("SEARCH FACILITY");
         System.out.println("  1. Search by Facility Name");
@@ -364,26 +237,6 @@ public class FacilityMaintenanceUI {
         }
     }
 
-    // ====================================================================== //
-    //  4 — UPDATE                                                             //
-    // ====================================================================== //
-
-    /**
-     * Updates an existing facility record.
-     *
-     * <p>The user first selects the record by ID, then optionally changes any
-     * combination of facility name, room type, and room name. Pressing Enter
-     * with an empty input on any field keeps the current value.
-     *
-     * <p><b>Room type scoping:</b> if the user changes the facility name, the
-     * room type menu immediately switches to show only types valid for the
-     * <em>new</em> facility name. If the facility name is kept, the room type
-     * menu shows types valid for the <em>existing</em> facility name.
-     *
-     * <p><b>Note on facility ID:</b> the ID prefix (L / C / S) is derived at
-     * creation time and is never changed during an update. If you need to move
-     * a room to a different category, delete it and add it again.
-     */
     private void updateFacility() {
         printSectionHeader("UPDATE FACILITY");
         System.out.println(facilityMaintenance.displayAllFacilities());
@@ -407,7 +260,6 @@ public class FacilityMaintenanceUI {
         System.out.printf("  %-14s: %s%n", "Room Name",     existing.getRoomName());
         printDivider();
 
-        // ── Update Facility Name ──────────────────────────────────────────
         System.out.println("\n  Update Facility Name?");
         System.out.println("  0. Keep current (" + existing.getFacilityName() + ")");
         System.out.println("  1. Change to a different facility category");
@@ -425,31 +277,29 @@ public class FacilityMaintenanceUI {
                 return;
             }
         } else {
-            // 0 or anything else → keep current
             newFacilityName     = existing.getFacilityName();
             facilityNameChanged = false;
         }
 
-        // ── Update Room Type (scoped to newFacilityName) ──────────────────
-        // If the facility name changed, the user MUST pick a new room type
-        // because the old type may not be valid for the new facility.
-        // If unchanged, the user may press 0 to keep the current room type.
         String newRoomType;
 
-        if (facilityNameChanged) {
-            System.out.println("\n  Facility name changed — please select a new room type:");
+        if (FNAME_OTHER.equalsIgnoreCase(newFacilityName)) {
+            newRoomType = roomTypesOtherList.getEntry(1);
+
+        } else if (facilityNameChanged) {
+            System.out.println("\n  Facility name changed -- please select a new room type:");
             newRoomType = chooseRoomType(newFacilityName);
             if (newRoomType == null) {
                 System.out.println("\n  Update cancelled.");
                 return;
             }
         } else {
-            // Facility name unchanged — show contextual options but allow "keep current"
             System.out.println("\n  Update Room Type?");
             System.out.println("  0. Keep current (" + existing.getRoomType() + ")");
-            String[] types = getRoomTypesFor(newFacilityName);
-            for (int i = 0; i < types.length; i++) {
-                System.out.println("  " + (i + 1) + ". " + types[i]);
+            SortedArrayList<String> types = getRoomTypesFor(newFacilityName);
+            int typeCount = types.getNumberOfEntries();
+            for (int i = 1; i <= typeCount; i++) {
+                System.out.println("  " + i + ". " + types.getEntry(i));
             }
             System.out.print("  Enter choice: ");
             String rawType = scanner.nextLine().trim();
@@ -459,33 +309,19 @@ public class FacilityMaintenanceUI {
             } else {
                 try {
                     int opt = Integer.parseInt(rawType);
-                    if (opt >= 1 && opt < types.length) {
-                        // One of the predefined options
-                        newRoomType = types[opt - 1];
-                    } else if (opt == types.length) {
-                        // Last entry is always "Other (enter manually)"
-                        System.out.print("  Enter custom room type: ");
-                        newRoomType = scanner.nextLine().trim();
-                        if (!facilityMaintenance.isValidRoomType(newRoomType)) {
-                            System.out.println("  [!!] Room type cannot be empty. Update cancelled.");
-                            return;
-                        }
+                    if (opt >= 1 && opt <= typeCount) {
+                        newRoomType = types.getEntry(opt);
                     } else {
                         System.out.println("  [!!] Invalid option. Update cancelled.");
                         return;
                     }
                 } catch (NumberFormatException e) {
-                    // Treat raw text as a direct custom entry
-                    newRoomType = rawType;
-                    if (!facilityMaintenance.isValidRoomType(newRoomType)) {
-                        System.out.println("  [!!] Room type cannot be empty. Update cancelled.");
-                        return;
-                    }
+                    System.out.println("  [!!] Invalid option. Update cancelled.");
+                    return;
                 }
             }
         }
 
-        // ── Update Room Name ──────────────────────────────────────────────
         System.out.print("\n  Enter New Room Name (press Enter to keep \""
                 + existing.getRoomName() + "\"): ");
         String newRoomName = scanner.nextLine().trim();
@@ -497,7 +333,6 @@ public class FacilityMaintenanceUI {
             return;
         }
 
-        // ── Preview & Confirm ─────────────────────────────────────────────
         System.out.println();
         printDivider();
         System.out.println("  UPDATED FACILITY PREVIEW");
@@ -527,14 +362,6 @@ public class FacilityMaintenanceUI {
         }
     }
 
-    // ====================================================================== //
-    //  5 — DELETE                                                             //
-    // ====================================================================== //
-
-    /**
-     * Displays all facilities, prompts for a facility ID, shows the matching
-     * record, and asks for confirmation before permanently deleting it.
-     */
     private void deleteFacility() {
         printSectionHeader("DELETE FACILITY");
         System.out.println(facilityMaintenance.displayAllFacilities());
@@ -572,64 +399,25 @@ public class FacilityMaintenanceUI {
         }
     }
 
-    // ====================================================================== //
-    //  FACILITY NAME SELECTION — two-level menu                              //
-    // ====================================================================== //
-
-    /**
-     * Top-level facility name selection menu.
-     *
-     * <p>Presents three facility categories plus an "Other" option. Choosing
-     * "Other" does <em>not</em> open a free-text prompt; it prints a guidance
-     * message and re-displays the same three-category menu. This enforces the
-     * rule that every facility must belong to one of the three recognised
-     * categories so that the ID prefix can be assigned consistently.
-     *
-     * <p>Choosing "Library Discussion Room / Individual Study Room" delegates
-     * to {@link #chooseLibraryFacilityType()} for a one-level sub-menu.
-     *
-     * <pre>
-     * ── Select Facility Name ──────────────────
-     *   1. Cyber Centre Discussion Room
-     *   2. Library Discussion Room / Individual Study Room
-     *   3. Sports Facilities
-     *   4. Other
-     *   Enter facility type number (0 to exit):
-     * </pre>
-     *
-     * @return the chosen {@code facilityName} string (one of the four
-     *         {@code FNAME_*} constants), or {@code null} if the user exits
-     */
     private String chooseFacilityName() {
         System.out.println();
         printDivider();
         System.out.println("  Select Facility Name:");
         printDivider();
-        System.out.println("  1. Cyber Centre Discussion Room");
-        System.out.println("  2. Library Discussion Room / Individual Study Room");
-        System.out.println("  3. Sports Facilities");
-        System.out.println("  4. Other");
+        System.out.println("  1. Cyber Centre                      (ID prefix: C)");
+        System.out.println("  2. Library                           (ID prefix: L)");
+        System.out.println("  3. Sports Facilities                 (ID prefix: S)");
+        System.out.println("  4. Other                             (ID prefix: O)");
         printDivider();
         System.out.print("  Enter facility type number (0 to exit): ");
         int choice = readInt();
 
         switch (choice) {
-            case 0 -> { return null; }  // caller interprets null as "cancel"
-
+            case 0 -> { return null; }
             case 1 -> { return FNAME_CYBER; }
-
-            case 2 -> { return chooseLibraryFacilityType(); }
-
+            case 2 -> { return FNAME_LIBRARY; }
             case 3 -> { return FNAME_SPORTS; }
-
-            case 4 -> {
-                // "Other" is not a free-text escape hatch at the category level.
-                // Redirect the user back to the recognised three options.
-                System.out.println("\n  \"Other\" does not create a custom category.");
-                System.out.println("  Please select one of the three recognised facility types below.");
-                return chooseFacilityName();
-            }
-
+            case 4 -> { return FNAME_OTHER; }
             default -> {
                 System.out.println("\n  [!!] Invalid choice. Please enter 0 – 4.");
                 return chooseFacilityName();
@@ -637,112 +425,30 @@ public class FacilityMaintenanceUI {
         }
     }
 
-    /**
-     * Sub-menu for the Library category, distinguishing between
-     * Library Discussion Room and Individual Study Room — both share the
-     * L prefix but have different room type options.
-     *
-     * <pre>
-     * ── Library Facility Type ─────────────────
-     *   1. Library Discussion Room
-     *   2. Individual Study Room
-     *   0. Back
-     *   Enter choice:
-     * </pre>
-     *
-     * @return {@link #FNAME_LIBRARY} or {@link #FNAME_STUDY}, or delegates
-     *         back to {@link #chooseFacilityName()} if the user presses 0
-     */
-    private String chooseLibraryFacilityType() {
-        System.out.println();
-        printDivider();
-        System.out.println("  Library Facility Type:");
-        printDivider();
-        System.out.println("  1. Library Discussion Room");
-        System.out.println("  2. Individual Study Room");
-        System.out.println("  0. Back");
-        printDivider();
-        System.out.print("  Enter choice: ");
-        int choice = readInt();
+    private SortedArrayList<String> getRoomTypesFor(String facilityName) {
+        if (facilityName == null) return roomTypesLibraryList;
 
-        switch (choice) {
-            case 0 -> { return chooseFacilityName(); }  // go back one level
-            case 1 -> { return FNAME_LIBRARY; }
-            case 2 -> { return FNAME_STUDY; }
-            default -> {
-                System.out.println("\n  [!!] Invalid choice. Please enter 0 – 2.");
-                return chooseLibraryFacilityType();
-            }
-        }
+        if (facilityName.equalsIgnoreCase(FNAME_CYBER))   return roomTypesCyberList;
+        if (facilityName.equalsIgnoreCase(FNAME_LIBRARY)) return roomTypesLibraryList;
+        if (facilityName.equalsIgnoreCase(FNAME_SPORTS))  return roomTypesSportsList;
+        if (facilityName.equalsIgnoreCase(FNAME_OTHER))   return roomTypesOtherList;
+
+        SortedArrayList<String> fallback = new SortedArrayList<>();
+        fallback.add("Other");
+        return fallback;
     }
 
-    // ====================================================================== //
-    //  ROOM TYPE SELECTION — contextual to facilityName                       //
-    // ====================================================================== //
-
-    /**
-     * Returns the array of valid room type options for the given facility name.
-     *
-     * <p>This is the single point of truth for the facility-name → room-type
-     * mapping. Any new room type for an existing category need only be added to
-     * the corresponding constant array; any new facility category needs a new
-     * constant array and a new {@code case} here.
-     *
-     * @param facilityName one of the four {@code FNAME_*} constants
-     * @return a non-null {@code String[]} of room type options, where the last
-     *         entry is always {@code "Other (enter manually)"}
-     */
-    private String[] getRoomTypesFor(String facilityName) {
-        if (facilityName == null) return ROOM_TYPES_LIBRARY;  // safe default
-
-        if (facilityName.equalsIgnoreCase(FNAME_CYBER))   return ROOM_TYPES_CYBER;
-        if (facilityName.equalsIgnoreCase(FNAME_LIBRARY)) return ROOM_TYPES_LIBRARY;
-        if (facilityName.equalsIgnoreCase(FNAME_STUDY))   return ROOM_TYPES_STUDY;
-        if (facilityName.equalsIgnoreCase(FNAME_SPORTS))  return ROOM_TYPES_SPORTS;
-
-        // Unknown facility name (custom entry via admin): offer a single "Other" option
-        return new String[]{ "Other (enter manually)" };
-    }
-
-    /**
-     * Room type selection menu, scoped to only show types valid for
-     * {@code facilityName}.
-     *
-     * <p>The last entry in every room type array is always
-     * {@code "Other (enter manually)"}; selecting it opens a free-text prompt
-     * so that new room types can be recorded without a code change.
-     *
-     * <p>Choosing {@code 0} cancels and returns {@code null} — the caller
-     * treats this as "cancel add/update".
-     *
-     * <pre>
-     * Example output when facilityName = "Sports Facilities":
-     *
-     * ── Select Room Type ──────────────────────
-     *   Facility: Sports Facilities
-     * ──────────────────────────────────────────
-     *   1. Pickleball Court
-     *   2. Badminton Court
-     *   3. Basketball Court
-     *   4. Other (enter manually)
-     *   0. Cancel
-     *   Enter choice:
-     * </pre>
-     *
-     * @param facilityName the facility name selected in the previous step;
-     *                     determines which room types are displayed
-     * @return the chosen room type string, or {@code null} if cancelled
-     */
     private String chooseRoomType(String facilityName) {
-        String[] types = getRoomTypesFor(facilityName);
+        SortedArrayList<String> types = getRoomTypesFor(facilityName);
+        int typeCount = types.getNumberOfEntries();
 
         System.out.println();
         printDivider();
         System.out.println("  Select Room Type");
         System.out.println("  Facility: " + facilityName);
         printDivider();
-        for (int i = 0; i < types.length; i++) {
-            System.out.println("  " + (i + 1) + ". " + types[i]);
+        for (int i = 1; i <= typeCount; i++) {
+            System.out.println("  " + i + ". " + types.getEntry(i));
         }
         System.out.println("  0. Cancel");
         printDivider();
@@ -751,36 +457,14 @@ public class FacilityMaintenanceUI {
 
         if (choice == 0) return null;
 
-        if (choice >= 1 && choice < types.length) {
-            // One of the predefined, non-"Other" room types
-            return types[choice - 1];
+        if (choice >= 1 && choice <= typeCount) {
+            return types.getEntry(choice);
         }
 
-        if (choice == types.length) {
-            // "Other (enter manually)" — the last entry in every types array
-            System.out.print("  Enter custom room type: ");
-            String custom = scanner.nextLine().trim();
-            if (!facilityMaintenance.isValidRoomType(custom)) {
-                System.out.println("  [!!] Room type cannot be empty.");
-                return chooseRoomType(facilityName); // retry
-            }
-            return custom;
-        }
-
-        // Out-of-range number
         System.out.println("  [!!] Invalid choice. Please try again.");
-        return chooseRoomType(facilityName); // retry
+        return chooseRoomType(facilityName);
     }
 
-    // ====================================================================== //
-    //  DISPLAY HELPERS                                                        //
-    // ====================================================================== //
-
-    /**
-     * Prints a section header with consistent formatting.
-     *
-     * @param title the section title, rendered in upper-case
-     */
     private void printSectionHeader(String title) {
         System.out.println();
         System.out.println("  ============================================================");
@@ -788,29 +472,17 @@ public class FacilityMaintenanceUI {
         System.out.println("  ============================================================");
     }
 
-    /** Prints a lightweight horizontal divider. */
     private void printDivider() {
         System.out.println("  ----------------------------------------------------------");
     }
 
-    // ====================================================================== //
-    //  INPUT HELPER                                                           //
-    // ====================================================================== //
-
-    /**
-     * Safe integer reader — loops until the user enters a valid integer.
-     * Prevents {@code InputMismatchException} from {@code Scanner.nextInt()}.
-     * Uses the same pattern as {@code UserMaintenanceUI.readInt()}.
-     *
-     * @return the valid integer entered by the user
-     */
     private int readInt() {
         while (!scanner.hasNextInt()) {
             System.out.print("  [!!] Invalid input. Please enter a number: ");
             scanner.nextLine();
         }
         int value = scanner.nextInt();
-        scanner.nextLine(); // flush trailing newline from the input buffer
+        scanner.nextLine();
         return value;
     }
 }

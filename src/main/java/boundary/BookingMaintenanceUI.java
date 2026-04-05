@@ -13,11 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Lai Yu Hui
  */
-public class BookingMaintenanceUI {
 
+public class BookingMaintenanceUI {
     private final Scanner scanner = new Scanner(System.in);
     private final BookingMaintenance bookingControl = new BookingMaintenance();
     private final FacilityMaintenance facilityControl = new FacilityMaintenance();

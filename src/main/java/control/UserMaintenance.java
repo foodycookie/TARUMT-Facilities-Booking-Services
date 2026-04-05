@@ -5,9 +5,9 @@ import dao.UserDAO;
 import entity.User;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Tay Tian You
  */
+
 public class UserMaintenance {
     private SortedArrayList<User> userList;
     private final UserDAO userDAO;

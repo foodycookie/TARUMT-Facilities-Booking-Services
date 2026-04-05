@@ -6,7 +6,7 @@ import entity.Timeslot;
 import java.time.LocalDate;
 
 /**
- * @author Ong Hao Howard
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
  */
 
 public class SortedListHelper {

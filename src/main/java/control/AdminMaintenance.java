@@ -5,9 +5,9 @@ import dao.AdminDAO;
 import entity.Admin;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Tay Tian You
  */
+
 public class AdminMaintenance {
     private SortedArrayList<Admin> adminList;
     private final AdminDAO adminDAO;
@@ -47,7 +47,6 @@ public class AdminMaintenance {
                             max = num;
                         }
                     } catch (NumberFormatException e) {
-                        // ignore invalid old data
                     }
                 }
             }

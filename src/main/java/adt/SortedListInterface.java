@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 /**
  * Entries in the list have positions that begin with 1.
- * @author
+ * @author Lai Yu Hui, Ong Hao Howard, Tay Tian You, Tiw Hong Xuan
  */
 
 public interface SortedListInterface<T extends Comparable<T>> {

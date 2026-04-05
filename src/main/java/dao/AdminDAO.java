@@ -2,17 +2,16 @@ package dao;
 
 import adt.SortedArrayList;
 import entity.Admin;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
- *
- * @author TAY TIAN YOU
+ * @author Tay Tian You
  */
 
 public class AdminDAO {
@@ -52,4 +51,3 @@ public class AdminDAO {
         } 
     }
 }
-

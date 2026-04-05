@@ -666,7 +666,7 @@ public class TimeslotMaintenanceUI {
         while (facilityIterator.hasNext()) {
             Facility facility = facilityIterator.next();
 
-            System.out.printf("%-" + COLUMN_INDEX + "d | %-" + COLUMN_WIDTH_ROOM_NAME + "s | %-" + COLUMN_WIDTH_ROOM_TYPE + "s", rowNum++, facility.getRoomName(), facility.getRoomType());
+            System.out.printf("%-" + COLUMN_INDEX + "d | %-" + COLUMN_WIDTH_ROOM_NAME + "s | %-" + COLUMN_WIDTH_ROOM_TYPE + "s", rowNum++, facility.getRoomName(), facility.getRoomTypeCode(facility.getRoomType()));
             
             for (int i = 1; i <= TIME_MARKS.getNumberOfEntries(); i++) {
                 LocalTime mark = TIME_MARKS.getEntry(i);

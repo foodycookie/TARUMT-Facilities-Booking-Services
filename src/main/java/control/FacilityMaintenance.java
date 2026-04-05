@@ -9,7 +9,7 @@ import entity.Facility;
 */
 
 public class FacilityMaintenance {
-    private static final String FACILITY_FILE = "data/facilities.dat";
+    private static final String FACILITY_FILE = "src/main/resources/facilities.dat";
     public static final String PREFIX_LIBRARY = "L";
     public static final String PREFIX_CYBER   = "C";
     public static final String PREFIX_SPORTS  = "S";

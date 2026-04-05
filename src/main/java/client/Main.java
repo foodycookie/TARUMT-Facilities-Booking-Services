@@ -65,32 +65,39 @@ public class Main {
         facilityMaintenance.addFacility(f17);
         facilityMaintenance.addFacility(f18);
         
-        UserMaintenance userMaintenance = new UserMaintenance();
-        
-        User u1 = new User("U000001", "TAY");
-        User u2 = new User("U000002", "JASON");
-        User u3 = new User("U000003", "SARAH");
-        User u4 = new User("U000004", "DANIEL");
-        User u5 = new User("U000005", "EMILY");
-
-        userMaintenance.addUser(u1);
-        userMaintenance.addUser(u2);
-        userMaintenance.addUser(u3);
-        userMaintenance.addUser(u4);
-        userMaintenance.addUser(u5);
-        
+        UserMaintenance userMaintenance = new UserMaintenance();        
         AdminMaintenance adminMaintenance = new AdminMaintenance();
+        
+        if (userMaintenance.findUserByUserId("U000001") == null) {
+            userMaintenance.addUser(new User("U000001", "TAY"));
+        }
+        if (userMaintenance.findUserByUserId("U000002") == null) {
+            userMaintenance.addUser(new User("U000002", "JASON"));
+        }
+        if (userMaintenance.findUserByUserId("U000003") == null) {
+            userMaintenance.addUser(new User("U000003", "SARAH"));
+        }
+        if (userMaintenance.findUserByUserId("U000004") == null) {
+            userMaintenance.addUser(new User("U000004", "DANIEL"));
+        }
+        if (userMaintenance.findUserByUserId("U000005") == null) {
+            userMaintenance.addUser(new User("U000005", "EMILY"));
+        }
 
-        Admin a1 = new Admin("A0001", "ALICE");
-        Admin a2 = new Admin("A0002", "BOB");
-        Admin a3 = new Admin("A0003", "CHARLIE");
-        Admin a4 = new Admin("A0004", "DAVID");
-        Admin a5 = new Admin("A0005", "EVELYN");
-
-        adminMaintenance.addAdmin(a1);
-        adminMaintenance.addAdmin(a2);
-        adminMaintenance.addAdmin(a3);
-        adminMaintenance.addAdmin(a4);
-        adminMaintenance.addAdmin(a5);
+        if (adminMaintenance.findAdminByAdminId("A0001") == null) {
+            adminMaintenance.addAdmin(new Admin("A0001", "ALICE"));
+        }
+        if (adminMaintenance.findAdminByAdminId("A0002") == null) {
+            adminMaintenance.addAdmin(new Admin("A0002", "BOB"));
+        }
+        if (adminMaintenance.findAdminByAdminId("A0003") == null) {
+            adminMaintenance.addAdmin(new Admin("A0003", "CHARLIE"));
+        }
+        if (adminMaintenance.findAdminByAdminId("A0004") == null) {
+            adminMaintenance.addAdmin(new Admin("A0004", "DAVID"));
+        }
+        if (adminMaintenance.findAdminByAdminId("A0005") == null) {
+            adminMaintenance.addAdmin(new Admin("A0005", "EVELYN"));
+        }
     }
 }

@@ -16,6 +16,10 @@ public class TimeslotMaintenance {
         timeslotDAO = new TimeslotDAO("src/main/resources/timeslot.dat");
         timeslotListDB = timeslotDAO.retrieveFromFile();
     }
+
+    public SortedArrayList<Timeslot> getTimeslotListDB() {
+        return timeslotListDB;
+    }
     
     // -----------------------------------------
     // CREATE
@@ -337,8 +341,8 @@ public class TimeslotMaintenance {
         
         return count;
     }
-    
-        public boolean bookOneTimeslot(String timeslotId, String bookingId, String userId, String userName) {
+      
+    public boolean bookOneTimeslot(String timeslotId, String bookingId, String userId, String userName) {
         Timeslot timeslot = findTimeslotById(timeslotId);
 
         if (timeslot == null) {
@@ -353,26 +357,27 @@ public class TimeslotMaintenance {
 
         return success;
     }
-        
-        public int releaseSlotsByBookingId(String bookingId) {
-    int count = 0;
-    Iterator<Timeslot> it = timeslotListDB.getIterator();
 
-    while (it.hasNext()) {
-        Timeslot slot = it.next();
-        if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
-            slot.cancel();
-            count++;
+    public int releaseSlotsByBookingId(String bookingId) {
+        int count = 0;
+        Iterator<Timeslot> it = timeslotListDB.getIterator();
+
+        while (it.hasNext()) {
+            Timeslot slot = it.next();
+            if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
+                slot.cancel();
+                count++;
+            }
         }
-    }
 
-    if (count > 0) {
-        timeslotDAO.saveToFile(timeslotListDB);
-    }
+        if (count > 0) {
+            timeslotDAO.saveToFile(timeslotListDB);
+        }
 
-    return count;
-}
-        public void reloadFromFile() {
-            timeslotListDB = timeslotDAO.retrieveFromFile();
-}
+        return count;
+    }
+    
+    public void reloadFromFile() {
+        timeslotListDB = timeslotDAO.retrieveFromFile();
+    }
 }

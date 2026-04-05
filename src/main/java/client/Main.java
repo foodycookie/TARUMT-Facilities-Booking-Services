@@ -2,8 +2,12 @@ package client;
 
 import adt.SortedArrayList;
 import boundary.TimeslotMaintenanceUI;
+import boundary.UserAdminMaintenanceUI;
+import control.AdminMaintenance;
 import control.FacilityMaintenance;
+import control.UserMaintenance;
 import entity.Facility;
+import utility.InputOutputHelper;
 
 /**
  *
@@ -13,17 +17,20 @@ public class Main {
     public static void main(String[] args) {
         TimeslotMaintenanceUI timeslotMaintenanceUI = new TimeslotMaintenanceUI();
         FacilityMaintenance facilityMaintenance = new FacilityMaintenance();
+        UserMaintenance userMaintenance = new UserMaintenance();
+        AdminMaintenance adminMaintenance = new AdminMaintenance();
+        UserAdminMaintenanceUI userAdminMaintenanceUI = new UserAdminMaintenanceUI();
         
         Facility f1 = new Facility("O002", "Other", "Other", "Toilet - O2");
         Facility f2 = new Facility("S002", "Sports Facilities", "Pickleball", "Pickleball Court 2");
-        Facility f3 = new Facility("C001", "Cyber Centre Room", "Discussion Room (1 PC)", "CC100");
+        Facility f3 = new Facility("C001", InputOutputHelper.FNAME_CYBER, "Discussion Room (1 PC)", "CC100");
         Facility f4 = new Facility("L001", "Library Room", "Discussion Room", "LD1");
-        Facility f5 = new Facility("C002", "Cyber Centre Room", "Discussion Room (2 PCs)", "CC101");
+        Facility f5 = new Facility("C002", InputOutputHelper.FNAME_CYBER, "Discussion Room (2 PCs)", "CC101");
         Facility f6 = new Facility("S001", "Sports Facilities", "Swimming Pool", "Swimming Pool Slot 1");
         Facility f7 = new Facility("S002", "Sports Facilities", "Pickleball", "Pickleball Court 1");
-        Facility f8 = new Facility("L002", "Library Room", "Individual Study Room", "LI1");
+        Facility f8 = new Facility("L002", "Library", "Individual Study Room", "LI1");
         Facility f9 = new Facility("O001", "Other", "Other", "Toilet - O1");
-        Facility f10 = new Facility("C003", "Cyber Centre Room", "Discussion Room (1 PC)", "CC102");
+        Facility f10 = new Facility("C003", InputOutputHelper.FNAME_CYBER, "Discussion Room (1 PC)", "CC102");
         
         facilityMaintenance.addFacility(f1);
         facilityMaintenance.addFacility(f2);
@@ -38,13 +45,10 @@ public class Main {
         
         SortedArrayList<Facility> facilityList = facilityMaintenance.getAllFacilities();
         
-        if (!facilityList.isEmpty()) {
-            timeslotMaintenanceUI.mainMenuForAdmin(facilityList, "A001", "Admin Test Hi");
-        }
-    
-        else {
-            System.out.println("Bye");
-        }
+        
+        timeslotMaintenanceUI.mainMenuForAdmin(facilityList, "A001", "Admin Test Hi");
+        
+
         }
 //    public void main(String[] args){
 //         int choice;

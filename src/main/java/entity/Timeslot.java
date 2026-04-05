@@ -26,9 +26,6 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
     private LocalTime startTime;
     private LocalTime endTime;
     private Status status;
-    private String bookingId;
-    private String bookedById;
-    private String bookedByName;
     private String blockedById;
     private String blockedByName;
 
@@ -39,9 +36,6 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         this.startTime = startTime;
         this.endTime = startTime.plusMinutes(MINUTES_PER_BLOCK);
         this.status = Status.AVAILABLE;
-        this.bookingId = null;
-        this.bookedById = null;
-        this.bookedByName = null;
         this.blockedById = null;
         this.blockedByName = null;
     }
@@ -84,18 +78,6 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         return status;
     }
     
-    public String getBookingId() {
-        return bookingId;
-    }
-
-    public String getBookedById() {
-        return bookedById;
-    }
-    
-     public String getBookedByName() {
-        return bookedByName;
-    }
-     
     public String getBlockedById() {
         return blockedById;
     }
@@ -111,17 +93,13 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         return "TS-" + facilityId + "-" + datePart + "-" + timePart;
     }
     
-    public boolean book(String bookingId, String userId, String userName) {
+    public boolean book(String bookingId) {
         if (this.status != Status.AVAILABLE) {
             return false;
         }
         
         this.status = Status.BOOKED;
-        this.bookingId = bookingId;
-        this.bookedById = userId;
-        this.bookedByName = userName;
-        
-        
+
         return true;
     }
     public boolean cancel() {
@@ -130,11 +108,7 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
         }
         
         this.status = Status.AVAILABLE;
-        this.bookingId = null;
-        this.bookedById = null;
-        this.bookedByName = null;
 
-        
         return true;
     }
 
@@ -231,8 +205,6 @@ public class Timeslot implements Comparable<Timeslot>, Serializable {
             startTime.format(timeFormat),
             endTime.format(timeFormat),
             status,
-            bookedById != null ? bookedById : "-",
-            bookedByName != null ? bookedByName : "-",
             blockedById != null ? blockedById : "-",
             blockedByName != null ? blockedByName : "-"
         );

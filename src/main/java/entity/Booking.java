@@ -55,8 +55,8 @@ public class Booking implements Serializable, Comparable<Booking> {
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
 
-    public String getTimeSlot() { return timeSlotId; }
-    public void setTimeSlot(String timeSlotId) { this.timeSlotId = timeSlotId; }
+    public String getTimeSlotId() { return timeSlotId; }
+    public void setTimeSlotId(String timeSlotId) { this.timeSlotId = timeSlotId; }
 
     @Override
     public boolean equals(Object obj) {

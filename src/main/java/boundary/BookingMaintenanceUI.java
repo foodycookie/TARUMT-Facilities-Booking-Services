@@ -98,7 +98,9 @@ public class BookingMaintenanceUI {
 
         if (booked) {
             SortedArrayList<Timeslot> refreshedList =
-                    timeslotControl.getTimeslotsForOneFacility(chosenFacility, selectedDate);
+            timeslotControl.getTimeslotsForOneFacility(chosenFacility, selectedDate);
+            
+            timeslotControl = new TimeslotMaintenance();
         }
     }
 
@@ -190,7 +192,7 @@ public class BookingMaintenanceUI {
     }
 
     private void printTimeslotList(SortedArrayList<Timeslot> timeslotList, Facility facility, LocalDate date) {
-        timeslotControl = new TimeslotMaintenance();
+        
         System.out.println("\n========== AVAILABLE TIMESLOTS ==========");
         System.out.println("Facility : " + facility.getRoomName());
         System.out.println("Date     : " + date.format(DATE_FORMAT));

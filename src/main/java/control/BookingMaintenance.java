@@ -134,7 +134,6 @@ public class BookingMaintenance {
             saveToFile();
             return true;
         } else {
-            timeslotControl.releaseSlotsByBookingId(bookingId);
             return false;
         }
     }
@@ -158,16 +157,14 @@ public class BookingMaintenance {
 
         boolean removed = bookingList.remove(booking);
 
-        if (removed) {
-            saveToFile();
-
-            timeslotControl.reloadFromFile();
-            timeslotControl.releaseSlotsByBookingId(bookingId);
-
-            return true;
+        if (!removed) {
+            return false;
         }
 
-        return false;
+        saveToFile();
+
+        timeslotControl.reloadFromFile();
+        return timeslotControl.releaseSlotByTimeslotId(booking.getTimeSlotId());
     }
 
     public String displayCurrentUserBookings() {

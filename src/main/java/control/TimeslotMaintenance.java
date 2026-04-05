@@ -363,23 +363,24 @@ public class TimeslotMaintenance {
         return success;
     }
 
-    public int releaseSlotsByBookingId(String bookingId) {
-        int count = 0;
-        Iterator<Timeslot> it = timeslotListDB.getIterator();
+    public boolean releaseSlotByTimeslotId(String timeslotId) {
+        Timeslot slot = findTimeslotById(timeslotId);
 
-        while (it.hasNext()) {
-            Timeslot slot = it.next();
-            if (bookingId.equals(slot.getBookingId()) && slot.isBooked()) {
-                slot.cancel();
-                count++;
-            }
+        if (slot == null) {
+            return false;
         }
 
-        if (count > 0) {
+        if (!slot.isBooked()) {
+            return false;
+        }
+
+        boolean success = slot.cancel();
+
+        if (success) {
             timeslotDAO.saveToFile(timeslotListDB);
         }
 
-        return count;
+        return success;
     }
     
     public void reloadFromFile() {

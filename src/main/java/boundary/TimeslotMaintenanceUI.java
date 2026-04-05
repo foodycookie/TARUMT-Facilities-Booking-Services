@@ -215,13 +215,19 @@ public class TimeslotMaintenanceUI {
 
         SortedArrayList<Timeslot> timeslotList = timeslotMaintenance.getTimeslotsForMultipleFacilities(targetFacilityList, date);
         
-        SortedArrayList<Facility> displayedFacilityList = printSlotTable(timeslotList, tableTitle, date);
-        
         if (timeslotList.isEmpty()) {
+            System.out.println("\nNo timeslot found");
             pause();
             return;
         }
-
+        
+        SortedArrayList<Facility> displayedFacilityList = printSlotTable(timeslotList, tableTitle, date);
+        
+        if (displayedFacilityList.isEmpty()) {
+            pause();
+            return;
+        }
+        
         System.out.println("Select a room index to view available slots, or 0 to go back:");
         
         int roomSelection = readInt("Room No.: ", 0, displayedFacilityList.getNumberOfEntries());
@@ -280,7 +286,7 @@ public class TimeslotMaintenanceUI {
             int actionSelection = readInt("\nSelect action: ", 0, 1);
 
             switch (actionSelection) {
-                // case 1 -> menuBookForChosenFacility(facility, availableTimeslot);
+                // case 1 -> menuBookForChosenFacility(facility, availableTimeslot, userId, userName);
                 case 0 -> browsing = false;
             }
         }
